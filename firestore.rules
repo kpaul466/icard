@@ -36,8 +36,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == resource.data.createdBy;
     }
 
+    // Validate required fields for an employee document.
+    // Note: do NOT require `createdAt` because server-side timestamps (FieldValue.serverTimestamp)
+    // may not be present in `request.resource.data` during the create request; requiring it
+    // causes create writes to be rejected with "missing or insufficient permissions".
     function isValidEmployee(data) {
-      return data.keys().hasAll(['name', 'designation', 'agencyName', 'employeeId', 'cccName', 'createdAt', 'createdBy']) &&
+      return data.keys().hasAll(['name', 'designation', 'agencyName', 'employeeId', 'cccName', 'createdBy']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
              data.designation is string && data.designation.size() > 0 && data.designation.size() < 100 &&
              data.agencyName is string && data.agencyName.size() > 0 && data.agencyName.size() < 100 &&

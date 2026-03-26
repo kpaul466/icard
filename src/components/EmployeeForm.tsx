@@ -42,13 +42,11 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
     address: editingEmployee?.address || '',
     designation: editingEmployee?.designation || 'AGENCY STAFF',
     agencyName: editingEmployee?.agencyName || '',
-    employeeId: editingEmployee?.employeeId || '',
     bloodGroup: editingEmployee?.bloodGroup || '',
     contactNumber: editingEmployee?.contactNumber || '',
     photoUrl: editingEmployee?.photoUrl || '',
-    validUntil: editingEmployee?.validUntil || '',
     validityRanges: editingEmployee?.validityRanges || '',
-    cccName: editingEmployee?.cccName || 'Falakata CCC',
+    validUntil: editingEmployee?.validUntil || '',
     workingArea: editingEmployee?.workingArea || 'JURIDICTION OF FALAKATA CCC',
     issueNo: editingEmployee?.issueNo || '',
     issueDate: editingEmployee?.issueDate || new Date().toISOString().split('T')[0],
@@ -61,13 +59,10 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
         address: editingEmployee.address || '',
         designation: editingEmployee.designation,
         agencyName: editingEmployee.agencyName,
-        employeeId: editingEmployee.employeeId,
         bloodGroup: editingEmployee.bloodGroup || '',
         contactNumber: editingEmployee.contactNumber || '',
         photoUrl: editingEmployee.photoUrl || '',
         validUntil: editingEmployee.validUntil || '',
-        validityRanges: editingEmployee.validityRanges || '',
-        cccName: editingEmployee.cccName || 'Falakata CCC',
         workingArea: editingEmployee.workingArea || 'JURIDICTION OF FALAKATA CCC',
         issueNo: editingEmployee.issueNo || '',
         issueDate: editingEmployee.issueDate || new Date().toISOString().split('T')[0],
@@ -130,13 +125,10 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
           address: '',
           designation: 'AGENCY STAFF',
           agencyName: '',
-          employeeId: '',
           bloodGroup: '',
           contactNumber: '',
           photoUrl: '',
           validUntil: '',
-          validityRanges: '',
-          cccName: 'Falakata CCC',
           workingArea: 'JURIDICTION OF FALAKATA CCC',
           issueNo: '',
           issueDate: new Date().toISOString().split('T')[0],
@@ -247,36 +239,19 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
           <InputGroup icon={<Briefcase size={18} />} label="Designation" name="designation" value={formData.designation} onChange={handleChange} required placeholder="AGENCY STAFF" />
           <InputGroup icon={<Building size={18} />} label="Agency Name" name="agencyName" value={formData.agencyName} onChange={handleChange} required placeholder="e.g. DAS ELECTRICAL" />
           
-          <InputGroup icon={<Hash size={18} />} label="Employee ID" name="employeeId" value={formData.employeeId} onChange={handleChange} required placeholder="e.g. WB/FKT/101" />
           <InputGroup icon={<Phone size={18} />} label="Contact Number" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="10-digit mobile number" />
 
-          <InputGroup icon={<Building size={18} />} label="CCC Name" name="cccName" value={formData.cccName} onChange={handleChange} placeholder="Falakata CCC" />
           <InputGroup icon={<MapPin size={18} />} label="Working Area" name="workingArea" value={formData.workingArea} onChange={handleChange} placeholder="JURIDICTION OF FALAKATA CCC" />
 
           <InputGroup icon={<Hash size={18} />} label="Issue Number" name="issueNo" value={formData.issueNo} onChange={handleChange} placeholder="FKT/CCC/..." />
           <InputGroup icon={<Calendar size={18} />} label="Issue Date" name="issueDate" type="date" value={formData.issueDate} onChange={handleChange} />
+          <InputGroup icon={<Calendar size={18} />} label="Valid Until" name="validUntil" type="date" value={formData.validUntil} onChange={handleChange} />
 
-          <div className="md:col-span-2 space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-3">
-              <Calendar size={16} className="text-indigo-500" />
-              Validity Ranges (One per line)
-            </label>
-            <textarea
-              name="validityRanges"
-              value={formData.validityRanges}
-              onChange={handleChange}
-              placeholder="08.10.2024 to 14.10.2024&#10;31.10.2024 to 01.11.2024"
-              className="w-full px-6 py-4 bg-slate-50/50 border border-slate-200 rounded-[24px] focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-bold h-32 resize-none placeholder:text-slate-300"
-            />
-          </div>
-        </div>
+             </div>
       </div>
 
       <div className="pt-10 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-        <div className="flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-          <ShieldCheck size={16} className="text-emerald-500" />
-          Secure Data Transmission
-        </div>
+    
         <button
           type="submit"
           disabled={loading}
@@ -288,9 +263,7 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
               Processing...
             </>
           ) : (
-            <>
-              <Plus size={22} />
-              Generate Identity Card
+            <>             Submit
             </>
           )}
         </button>
