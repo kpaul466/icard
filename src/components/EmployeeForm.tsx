@@ -3,22 +3,22 @@ import { db, auth } from '../firebase';
 import { collection, addDoc, updateDoc, doc, serverTimestamp, Bytes } from 'firebase/firestore';
 import { Employee } from '../types';
 import { getPhotoUrl } from '../lib/firebaseUtils';
-import { 
-  Plus, 
-  User, 
-  Briefcase, 
-  Building, 
-  Hash, 
-  Droplets, 
-  Phone, 
-  Calendar, 
-  MapPin, 
-  Camera, 
-  Upload, 
-  X, 
-  ShieldCheck, 
-  CheckCircle2, 
-  Map, 
+import {
+  Plus,
+  User,
+  Briefcase,
+  Building,
+  Hash,
+  Droplets,
+  Phone,
+  Calendar,
+  MapPin,
+  Camera,
+  Upload,
+  X,
+  ShieldCheck,
+  CheckCircle2,
+  Map,
   Globe,
   Save,
   ArrowLeft
@@ -34,21 +34,20 @@ interface EmployeeFormProps {
 
 export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeFormProps) {
   const [loading, setLoading] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(editingEmployee?.photoUrl || null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(editingEmployee?.photoUrl ? getPhotoUrl(editingEmployee.photoUrl) || null : null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [formData, setFormData] = useState({
     name: editingEmployee?.name || '',
     address: editingEmployee?.address || '',
     designation: editingEmployee?.designation || 'AGENCY STAFF',
     agencyName: editingEmployee?.agencyName || '',
-    employeeId: editingEmployee?.employeeId || '',
+    cccName: editingEmployee?.cccName || 'Falakata CCC',
     bloodGroup: editingEmployee?.bloodGroup || '',
     contactNumber: editingEmployee?.contactNumber || '',
     photoUrl: editingEmployee?.photoUrl || '',
-    validUntil: editingEmployee?.validUntil || '',
     validityRanges: editingEmployee?.validityRanges || '',
-    cccName: editingEmployee?.cccName || 'Falakata CCC',
+    validUntil: editingEmployee?.validUntil || '',
     workingArea: editingEmployee?.workingArea || 'JURIDICTION OF FALAKATA CCC',
     issueNo: editingEmployee?.issueNo || '',
     issueDate: editingEmployee?.issueDate || new Date().toISOString().split('T')[0],
@@ -61,13 +60,12 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
         address: editingEmployee.address || '',
         designation: editingEmployee.designation,
         agencyName: editingEmployee.agencyName,
-        employeeId: editingEmployee.employeeId,
+        cccName: editingEmployee.cccName || 'Falakata CCC',
         bloodGroup: editingEmployee.bloodGroup || '',
         contactNumber: editingEmployee.contactNumber || '',
         photoUrl: editingEmployee.photoUrl || '',
-        validUntil: editingEmployee.validUntil || '',
         validityRanges: editingEmployee.validityRanges || '',
-        cccName: editingEmployee.cccName || 'Falakata CCC',
+        validUntil: editingEmployee.validUntil || '',
         workingArea: editingEmployee.workingArea || 'JURIDICTION OF FALAKATA CCC',
         issueNo: editingEmployee.issueNo || '',
         issueDate: editingEmployee.issueDate || new Date().toISOString().split('T')[0],
@@ -83,12 +81,12 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
         alert('File is too large. Please choose an image under 800KB.');
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setPhotoPreview(base64String);
-        
+
         // Convert base64 to Bytes for Firestore
         const base64Data = base64String.split(',')[1];
         const bytes = Bytes.fromBase64String(base64Data);
@@ -123,20 +121,19 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
           createdBy: auth.currentUser.uid,
         });
       }
-      
+
       if (!editingEmployee) {
         setFormData({
           name: '',
           address: '',
           designation: 'AGENCY STAFF',
           agencyName: '',
-          employeeId: '',
+          cccName: 'Falakata CCC',
           bloodGroup: '',
           contactNumber: '',
           photoUrl: '',
-          validUntil: '',
           validityRanges: '',
-          cccName: 'Falakata CCC',
+          validUntil: '',
           workingArea: 'JURIDICTION OF FALAKATA CCC',
           issueNo: '',
           issueDate: new Date().toISOString().split('T')[0],
@@ -156,15 +153,15 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
   };
 
   return (
-    <motion.form 
+    <motion.form
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      onSubmit={handleSubmit} 
+      onSubmit={handleSubmit}
       className="bg-white p-10 rounded-[48px] shadow-2xl shadow-indigo-500/5 border border-slate-100 space-y-10 max-w-5xl mx-auto relative overflow-hidden"
     >
       {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
-      
+
       <div className="flex items-center justify-between relative z-10">
         <div className="flex items-center gap-5">
           <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl text-white flex items-center justify-center shadow-xl shadow-indigo-500/20">
@@ -177,7 +174,7 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
             <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mt-1.5">Emergency Duty ID System</p>
           </div>
         </div>
-        
+
         {editingEmployee && onCancel && (
           <button
             type="button"
@@ -199,7 +196,7 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
                 <div className="relative w-full h-full group">
                   <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                    <button 
+                    <button
                       type="button"
                       onClick={removePhoto}
                       className="p-3 bg-red-500 text-white rounded-2xl shadow-xl hover:bg-red-600 transition-all hover:scale-110"
@@ -219,8 +216,8 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
                   </div>
                 </div>
               )}
-              <input 
-                type="file" 
+              <input
+                type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 accept="image/*"
@@ -239,44 +236,28 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
         <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
           <InputGroup icon={<User size={18} />} label="Full Name" name="name" value={formData.name} onChange={handleChange} required placeholder="e.g. Rahul Sharma" />
           <InputGroup icon={<Droplets size={18} />} label="Blood Group" name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} placeholder="e.g. B+ Positive" />
-          
+
           <div className="md:col-span-2">
             <InputGroup icon={<MapPin size={18} />} label="Residential Address" name="address" value={formData.address} onChange={handleChange} placeholder="Village, P.O, District, PIN Code" />
           </div>
 
           <InputGroup icon={<Briefcase size={18} />} label="Designation" name="designation" value={formData.designation} onChange={handleChange} required placeholder="AGENCY STAFF" />
           <InputGroup icon={<Building size={18} />} label="Agency Name" name="agencyName" value={formData.agencyName} onChange={handleChange} required placeholder="e.g. DAS ELECTRICAL" />
+          <InputGroup icon={<Building size={18} />} label="CCC Name" name="cccName" value={formData.cccName} onChange={handleChange} required placeholder="e.g. Falakata CCC" />
           
-          <InputGroup icon={<Hash size={18} />} label="Employee ID" name="employeeId" value={formData.employeeId} onChange={handleChange} required placeholder="e.g. WB/FKT/101" />
           <InputGroup icon={<Phone size={18} />} label="Contact Number" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="10-digit mobile number" />
 
-          <InputGroup icon={<Building size={18} />} label="CCC Name" name="cccName" value={formData.cccName} onChange={handleChange} placeholder="Falakata CCC" />
           <InputGroup icon={<MapPin size={18} />} label="Working Area" name="workingArea" value={formData.workingArea} onChange={handleChange} placeholder="JURIDICTION OF FALAKATA CCC" />
 
           <InputGroup icon={<Hash size={18} />} label="Issue Number" name="issueNo" value={formData.issueNo} onChange={handleChange} placeholder="FKT/CCC/..." />
           <InputGroup icon={<Calendar size={18} />} label="Issue Date" name="issueDate" type="date" value={formData.issueDate} onChange={handleChange} />
+          <InputGroup icon={<Calendar size={18} />} label="Valid Until" name="validUntil" type="date" value={formData.validUntil} onChange={handleChange} />
 
-          <div className="md:col-span-2 space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-3">
-              <Calendar size={16} className="text-indigo-500" />
-              Validity Ranges (One per line)
-            </label>
-            <textarea
-              name="validityRanges"
-              value={formData.validityRanges}
-              onChange={handleChange}
-              placeholder="08.10.2024 to 14.10.2024&#10;31.10.2024 to 01.11.2024"
-              className="w-full px-6 py-4 bg-slate-50/50 border border-slate-200 rounded-[24px] focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-bold h-32 resize-none placeholder:text-slate-300"
-            />
-          </div>
-        </div>
+             </div>
       </div>
 
       <div className="pt-10 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-        <div className="flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-          <ShieldCheck size={16} className="text-emerald-500" />
-          Secure Data Transmission
-        </div>
+
         <button
           type="submit"
           disabled={loading}
@@ -288,9 +269,7 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
               Processing...
             </>
           ) : (
-            <>
-              <Plus size={22} />
-              Generate Identity Card
+            <>             Submit
             </>
           )}
         </button>

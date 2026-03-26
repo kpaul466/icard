@@ -4,7 +4,6 @@ export interface Employee {
   address?: string;
   designation: string;
   agencyName: string;
-  employeeId: string;
   bloodGroup?: string;
   contactNumber?: string;
   photoUrl?: string;

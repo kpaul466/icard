@@ -21,7 +21,6 @@ export function EmployeeList({ employees, onDelete, onEdit }: EmployeeListProps)
 
   const filteredEmployees = employees.filter(emp => 
     emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    emp.employeeId.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.agencyName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
