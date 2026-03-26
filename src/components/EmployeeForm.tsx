@@ -1,8 +1,59 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { db, auth } from '../firebase';
-import { collection, addDoc, updateDoc, doc, serverTimestamp, Bytes } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, serverTimestamp, Bytes, getDocFromServer } from 'firebase/firestore';
 import { Employee } from '../types';
 import { getPhotoUrl } from '../lib/firebaseUtils';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId: string | undefined;
+    email: string | null | undefined;
+    emailVerified: boolean | undefined;
+    isAnonymous: boolean | undefined;
+    tenantId: string | null | undefined;
+    providerInfo: {
+      providerId: string;
+      displayName: string | null;
+      email: string | null;
+      photoUrl: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData.map(provider => ({
+        providerId: provider.providerId,
+        displayName: provider.displayName,
+        email: provider.email,
+        photoUrl: provider.photoURL
+      })) || []
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 import {
   Plus,
   User,
@@ -52,6 +103,19 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
     issueNo: editingEmployee?.issueNo || '',
     issueDate: editingEmployee?.issueDate || new Date().toISOString().split('T')[0],
   });
+
+  useEffect(() => {
+    async function testConnection() {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if(error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Please check your Firebase configuration. ");
+        }
+      }
+    }
+    testConnection();
+  }, []);
 
   useEffect(() => {
     if (editingEmployee) {
@@ -110,16 +174,24 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
     try {
       if (editingEmployee?.id) {
         const employeeRef = doc(db, 'employees', editingEmployee.id);
-        await updateDoc(employeeRef, {
-          ...formData,
-          updatedAt: serverTimestamp(),
-        });
+        try {
+          await updateDoc(employeeRef, {
+            ...formData,
+            updatedAt: serverTimestamp(),
+          });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.UPDATE, `employees/${editingEmployee.id}`);
+        }
       } else {
-        await addDoc(collection(db, 'employees'), {
-          ...formData,
-          createdAt: serverTimestamp(),
-          createdBy: auth.currentUser.uid,
-        });
+        try {
+          await addDoc(collection(db, 'employees'), {
+            ...formData,
+            createdAt: serverTimestamp(),
+            createdBy: auth.currentUser.uid,
+          });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.CREATE, 'employees');
+        }
       }
 
       if (!editingEmployee) {

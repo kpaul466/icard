@@ -55,7 +55,7 @@
           "description": "UID of the user who created the record."
         }
       },
-      "required": ["name", "designation", "agencyName", "employeeId", "cccName"]
+      "required": ["name", "designation", "agencyName", "cccName"]
     }
   },
   "firestore": {

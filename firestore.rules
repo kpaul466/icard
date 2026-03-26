@@ -37,21 +37,23 @@ service cloud.firestore {
     }
 
     function isValidEmployee(data) {
-      return data.keys().hasAll(['name', 'designation', 'agencyName', 'employeeId', 'cccName', 'createdAt', 'createdBy']) &&
+      return data.keys().hasAll(['name', 'designation', 'agencyName', 'cccName']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
              data.designation is string && data.designation.size() > 0 && data.designation.size() < 100 &&
              data.agencyName is string && data.agencyName.size() > 0 && data.agencyName.size() < 100 &&
-             data.employeeId is string && data.employeeId.size() > 0 && data.employeeId.size() < 50 &&
-             data.cccName is string && data.cccName.size() > 0 && data.cccName.size() < 100 &&
-             data.createdBy == request.auth.uid;
+             data.cccName is string && data.cccName.size() > 0 && data.cccName.size() < 200;
     }
 
     match /employees/{employeeId} {
       // Allow authenticated users to read and write their own employee records
-      allow read: if isAuthenticated() && (resource == null || resource.data.createdBy == request.auth.uid);
-      allow create: if isAuthenticated() && isValidEmployee(request.resource.data);
-      allow update: if isAuthenticated() && isDocOwner() && isValidEmployee(request.resource.data);
-      allow delete: if isAuthenticated() && isDocOwner();
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+                    isValidEmployee(request.resource.data) && 
+                    request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAuthenticated() && 
+                    (resource.data.createdBy == request.auth.uid) && 
+                    isValidEmployee(request.resource.data);
+      allow delete: if isAuthenticated() && (resource.data.createdBy == request.auth.uid);
     }
     
     match /users/{userId} {
