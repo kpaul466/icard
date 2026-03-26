@@ -72,10 +72,14 @@ import {
   Map,
   Globe,
   Save,
-  ArrowLeft
+  ArrowLeft,
+  Edit2
 } from 'lucide-react';
 
 import { motion } from 'motion/react';
+
+import { ImageEditor } from './ImageEditor';
+import { AnimatePresence } from 'motion/react';
 
 interface EmployeeFormProps {
   onSuccess: () => void;
@@ -87,6 +91,8 @@ interface EmployeeFormProps {
 export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }: EmployeeFormProps) {
   const [loading, setLoading] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(editingEmployee?.photoUrl ? getPhotoUrl(editingEmployee.photoUrl) || null : null);
+  const [isEditingPhoto, setIsEditingPhoto] = useState(false);
+  const [originalPhoto, setOriginalPhoto] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -142,23 +148,24 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 800000) { // Firestore limit is 1MB, keeping it safe
-        alert('File is too large. Please choose an image under 800KB.');
-        return;
-      }
-
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setPhotoPreview(base64String);
-
-        // Convert base64 to Bytes for Firestore
-        const base64Data = base64String.split(',')[1];
-        const bytes = Bytes.fromBase64String(base64Data);
-        setFormData(prev => ({ ...prev, photoUrl: bytes as any }));
+        setOriginalPhoto(base64String);
+        setIsEditingPhoto(true);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleSaveEditedImage = (editedImage: string) => {
+    setPhotoPreview(editedImage);
+    setIsEditingPhoto(false);
+
+    // Convert base64 to Bytes for Firestore
+    const base64Data = editedImage.split(',')[1];
+    const bytes = Bytes.fromBase64String(base64Data);
+    setFormData(prev => ({ ...prev, photoUrl: bytes as any }));
   };
 
   const removePhoto = () => {
@@ -232,7 +239,18 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
   };
 
   return (
-    <motion.form
+    <>
+      <AnimatePresence>
+        {isEditingPhoto && originalPhoto && (
+          <ImageEditor
+            image={originalPhoto}
+            onSave={handleSaveEditedImage}
+            onCancel={() => setIsEditingPhoto(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <motion.form
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       onSubmit={handleSubmit}
@@ -275,13 +293,25 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
                 <div className="relative w-full h-full group">
                   <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                    <button
-                      type="button"
-                      onClick={removePhoto}
-                      className="p-3 bg-red-500 text-white rounded-2xl shadow-xl hover:bg-red-600 transition-all hover:scale-110"
-                    >
-                      <X size={24} />
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOriginalPhoto(photoPreview);
+                          setIsEditingPhoto(true);
+                        }}
+                        className="p-3 bg-indigo-600 text-white rounded-2xl shadow-xl hover:bg-indigo-700 transition-all hover:scale-110"
+                      >
+                        <Edit2 size={24} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={removePhoto}
+                        className="p-3 bg-red-500 text-white rounded-2xl shadow-xl hover:bg-red-600 transition-all hover:scale-110"
+                      >
+                        <X size={24} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -353,7 +383,8 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
           )}
         </button>
       </div>
-    </motion.form>
+      </motion.form>
+    </>
   );
 }
 
