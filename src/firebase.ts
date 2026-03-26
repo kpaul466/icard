@@ -9,7 +9,10 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
 export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
-export const logout = () => signOut(auth);
+export const logout = () => {
+  localStorage.removeItem('id-portal-user-settings');
+  return signOut(auth);
+};
 
 // Local Development Support
 if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {

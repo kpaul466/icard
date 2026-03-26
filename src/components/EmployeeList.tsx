@@ -14,9 +14,10 @@ interface EmployeeListProps {
   employees: Employee[];
   onDelete: () => void;
   onEdit: (employee: Employee) => void;
+  settings: any;
 }
 
-export function EmployeeList({ employees, onDelete, onEdit }: EmployeeListProps) {
+export function EmployeeList({ employees, onDelete, onEdit, settings }: EmployeeListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredEmployees = employees.filter(emp => 
@@ -68,14 +69,14 @@ export function EmployeeList({ employees, onDelete, onEdit }: EmployeeListProps)
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {filteredEmployees.map((employee, index) => (
-          <EmployeeListItem key={employee.id || index} employee={employee} onDelete={onDelete} onEdit={onEdit} index={index} />
+          <EmployeeListItem key={employee.id || index} employee={employee} onDelete={onDelete} onEdit={onEdit} index={index} settings={settings} />
         ))}
       </div>
     </div>
   );
 }
 
-const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onEdit: (employee: Employee) => void; index: number }> = ({ employee, onDelete, onEdit, index }) => {
+const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onEdit: (employee: Employee) => void; index: number; settings: any }> = ({ employee, onDelete, onEdit, index, settings }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -257,7 +258,7 @@ const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onE
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-500/5 blur-3xl rounded-full -translate-x-1/2 translate-y-1/2"></div>
         
         <div className="relative z-10 scale-[0.9] sm:scale-100 transition-transform duration-500 group-hover:scale-[1.02]">
-          <IDCard ref={cardRef} employee={employee} />
+          <IDCard ref={cardRef} employee={employee} settings={settings} />
         </div>
       </div>
     </motion.div>

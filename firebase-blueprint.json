@@ -53,15 +53,81 @@
         "createdBy": {
           "type": "string",
           "description": "UID of the user who created the record."
+        },
+        "officePhone": {
+          "type": "string",
+          "description": "Office contact phone number at time of issuance."
+        },
+        "officeEmail": {
+          "type": "string",
+          "description": "Office contact email address at time of issuance."
+        },
+        "issuingAuthority": {
+          "type": "string",
+          "description": "Issuing authority details at time of issuance."
+        },
+        "emergencyTag": {
+          "type": "string",
+          "description": "Emergency tag details at time of issuance."
+        },
+        "cccName": {
+          "type": "string",
+          "description": "CCC Name at time of issuance."
         }
       },
       "required": ["name", "designation", "agencyName", "cccName"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user of the ID card system.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "editor"] },
+        "officePhone": { "type": "string" },
+        "officeEmail": { "type": "string" },
+        "issuingAuthority": { "type": "string" },
+        "emergencyTag": { "type": "string" },
+        "cccName": { "type": "string" }
+      }
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global application settings for ID cards.",
+      "type": "object",
+      "properties": {
+        "officePhone": {
+          "type": "string",
+          "description": "Office contact phone number."
+        },
+        "officeEmail": {
+          "type": "string",
+          "description": "Office contact email address."
+        },
+        "issuingAuthority": {
+          "type": "string",
+          "description": "Name/Title of the issuing authority."
+        },
+        "emergencyTag": {
+          "type": "string",
+          "description": "Emergency contact/tag details."
+        },
+        "cccName": {
+          "type": "string",
+          "description": "Default CCC Name."
+        }
+      }
     }
   },
   "firestore": {
     "employees": {
       "schema": "Employee",
       "description": "Collection of employee records for ID card generation."
+    },
+    "settings": {
+      "schema": "Settings",
+      "description": "Global settings document (usually a single doc named 'global')."
     }
   }
 }

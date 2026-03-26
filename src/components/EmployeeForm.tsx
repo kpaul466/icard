@@ -81,9 +81,10 @@ interface EmployeeFormProps {
   onSuccess: () => void;
   editingEmployee?: Employee | null;
   onCancel?: () => void;
+  settings?: any;
 }
 
-export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeFormProps) {
+export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }: EmployeeFormProps) {
   const [loading, setLoading] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(editingEmployee?.photoUrl ? getPhotoUrl(editingEmployee.photoUrl) || null : null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -188,6 +189,12 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
             ...formData,
             createdAt: serverTimestamp(),
             createdBy: auth.currentUser.uid,
+            // Capture current settings snapshot
+            officePhone: settings?.officePhone || '',
+            officeEmail: settings?.officeEmail || '',
+            issuingAuthority: settings?.issuingAuthority || '',
+            emergencyTag: settings?.emergencyTag || '',
+            cccName: settings?.cccName || '',
           });
         } catch (error) {
           handleFirestoreError(error, OperationType.CREATE, 'employees');

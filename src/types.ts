@@ -9,10 +9,15 @@ export interface Employee {
   photoUrl?: string;
   validUntil?: string;
   validityRanges?: string; // For multiple ranges if needed
-  cccName: string;
   workingArea?: string;
   issueNo?: string;
   issueDate?: string;
   createdAt: any; // Firestore Timestamp
   createdBy: string;
+  // Settings snapshot
+  officePhone?: string;
+  officeEmail?: string;
+  issuingAuthority?: string;
+  emergencyTag?: string;
+  cccName?: string;
 }

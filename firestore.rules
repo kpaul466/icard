@@ -36,6 +36,18 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == resource.data.createdBy;
     }
 
+    function isAdmin() {
+      return isAuthenticated() &&
+        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+          (request.auth.token.email == "kkeshob@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isAuthorized() {
+      return isAuthenticated() && 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) || isAdmin());
+    }
+
     function isValidEmployee(data) {
       return data.keys().hasAll(['name', 'designation', 'agencyName', 'cccName']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
@@ -45,19 +57,34 @@ service cloud.firestore {
     }
 
     match /employees/{employeeId} {
-      // Allow authenticated users to read and write their own employee records
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && 
+      // Allow authorized users to read and write their own employee records
+      allow read: if isAuthorized();
+      allow create: if isAuthorized() && 
                     isValidEmployee(request.resource.data) && 
                     request.resource.data.createdBy == request.auth.uid;
-      allow update: if isAuthenticated() && 
-                    (resource.data.createdBy == request.auth.uid) && 
+      allow update: if isAuthorized() && 
+                    (resource.data.createdBy == request.auth.uid || isAdmin()) && 
                     isValidEmployee(request.resource.data);
-      allow delete: if isAuthenticated() && (resource.data.createdBy == request.auth.uid);
+      allow delete: if isAuthorized() && (resource.data.createdBy == request.auth.uid || isAdmin());
     }
     
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isOwner(userId);
+    }
+
+    function isValidSettings(data) {
+      return data.keys().hasAll(['officePhone', 'officeEmail', 'issuingAuthority', 'emergencyTag', 'cccName']) &&
+             data.officePhone is string &&
+             data.officeEmail is string &&
+             data.issuingAuthority is string &&
+             data.emergencyTag is string &&
+             data.cccName is string;
+    }
+
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() && isValidSettings(request.resource.data);
     }
   }
 }
