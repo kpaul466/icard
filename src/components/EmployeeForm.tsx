@@ -42,13 +42,13 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
     address: editingEmployee?.address || '',
     designation: editingEmployee?.designation || 'AGENCY STAFF',
     agencyName: editingEmployee?.agencyName || '',
-    cccName: editingEmployee?.cccName || 'Falakata CCC',
+    cccName: editingEmployee?.cccName || 'Falakata Customer Care Center, Falakata, Alipurduar',
     bloodGroup: editingEmployee?.bloodGroup || '',
     contactNumber: editingEmployee?.contactNumber || '',
     photoUrl: editingEmployee?.photoUrl || '',
     validityRanges: editingEmployee?.validityRanges || '',
     validUntil: editingEmployee?.validUntil || '',
-    workingArea: editingEmployee?.workingArea || 'JURIDICTION OF FALAKATA CCC',
+    workingArea: editingEmployee?.workingArea || 'FALAKATA CCC',
     issueNo: editingEmployee?.issueNo || '',
     issueDate: editingEmployee?.issueDate || new Date().toISOString().split('T')[0],
   });
@@ -60,13 +60,13 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
         address: editingEmployee.address || '',
         designation: editingEmployee.designation,
         agencyName: editingEmployee.agencyName,
-        cccName: editingEmployee.cccName || 'Falakata CCC',
+        cccName: editingEmployee.cccName || 'Falakata Customer Care Center, Falakata, Alipurduar',
         bloodGroup: editingEmployee.bloodGroup || '',
         contactNumber: editingEmployee.contactNumber || '',
         photoUrl: editingEmployee.photoUrl || '',
         validityRanges: editingEmployee.validityRanges || '',
         validUntil: editingEmployee.validUntil || '',
-        workingArea: editingEmployee.workingArea || 'JURIDICTION OF FALAKATA CCC',
+        workingArea: editingEmployee.workingArea || 'FALAKATA CCC',
         issueNo: editingEmployee.issueNo || '',
         issueDate: editingEmployee.issueDate || new Date().toISOString().split('T')[0],
       });
@@ -128,13 +128,13 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
           address: '',
           designation: 'AGENCY STAFF',
           agencyName: '',
-          cccName: 'Falakata CCC',
+          cccName: 'Falakata Customer Care Center, Falakata, Alipurduar',
           bloodGroup: '',
           contactNumber: '',
           photoUrl: '',
           validityRanges: '',
           validUntil: '',
-          workingArea: 'JURIDICTION OF FALAKATA CCC',
+          workingArea: 'FALAKATA CCC',
           issueNo: '',
           issueDate: new Date().toISOString().split('T')[0],
         });
@@ -247,7 +247,7 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
           
           <InputGroup icon={<Phone size={18} />} label="Contact Number" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="10-digit mobile number" />
 
-          <InputGroup icon={<MapPin size={18} />} label="Working Area" name="workingArea" value={formData.workingArea} onChange={handleChange} placeholder="JURIDICTION OF FALAKATA CCC" />
+          <InputGroup icon={<MapPin size={18} />} label="Working Area" name="workingArea" value={formData.workingArea} onChange={handleChange} placeholder="FALAKATA CCC" />
 
           <InputGroup icon={<Hash size={18} />} label="Issue Number" name="issueNo" value={formData.issueNo} onChange={handleChange} placeholder="FKT/CCC/..." />
           <InputGroup icon={<Calendar size={18} />} label="Issue Date" name="issueDate" type="date" value={formData.issueDate} onChange={handleChange} />
