@@ -371,10 +371,10 @@ function AppContent() {
           </div>
 
           <div className="flex items-center gap-2 md:gap-6">
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-xs md:text-sm font-black text-white">{user.displayName}</span>
-              <span className="text-[8px] md:text-[10px] font-black text-indigo-300 uppercase tracking-widest mt-0.5">
-                {isAdmin ? 'System Administrator' : 'Authorized Personnel'}
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] sm:text-xs md:text-sm font-black text-white truncate max-w-[80px] sm:max-w-none">{user.displayName}</span>
+              <span className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-indigo-300 uppercase tracking-widest mt-0.5">
+                {isAdmin ? 'Admin' : 'Staff'}
               </span>
             </div>
             <div className="h-8 w-px bg-white/10 hidden sm:block"></div>
@@ -391,22 +391,22 @@ function AppContent() {
 
       <main className="responsive-container py-6 md:py-10">
         {/* Dashboard Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12">
+        <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-8 md:mb-12">
           <StatCard 
             icon={<Users className="text-indigo-600" />} 
-            label="Total Employees" 
+            label="Employees" 
             value={employees.length} 
             color="bg-indigo-50"
           />
           <StatCard 
             icon={<ShieldCheck className="text-emerald-600" />} 
-            label="Active Agencies" 
+            label="Agencies" 
             value={new Set(employees.map(e => e.agencyName)).size} 
             color="bg-emerald-50"
           />
           <StatCard 
             icon={<Calendar className="text-amber-600" />} 
-            label="Recent Issues" 
+            label="Recent" 
             value={employees.filter(e => {
               const date = new Date(e.issueDate || '');
               const now = new Date();
@@ -417,65 +417,68 @@ function AppContent() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 md:mb-10">
-          <div className="flex flex-wrap p-1.5 bg-white/70 rounded-[24px] md:rounded-[32px] w-full lg:w-fit backdrop-blur-sm border border-slate-200/50 shadow-sm">
-            <button
-              onClick={() => { setActiveTab('list'); setEditingEmployee(null); }}
-              className={`flex-1 lg:flex-none flex items-center justify-center gap-2 md:gap-3 px-4 md:px-8 py-3 md:py-3.5 rounded-[18px] md:rounded-[24px] text-xs md:text-sm font-black transition-all ${
-                activeTab === 'list' 
-                  ? 'bg-white text-indigo-600 shadow-lg shadow-indigo-500/5' 
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <Users size={18} />
-              <span className="hidden sm:inline">Directory</span>
-              <span className="sm:hidden">List</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('add')}
-              className={`flex-1 lg:flex-none flex items-center justify-center gap-2 md:gap-3 px-4 md:px-8 py-3 md:py-3.5 rounded-[18px] md:rounded-[24px] text-xs md:text-sm font-black transition-all ${
-                activeTab === 'add' 
-                  ? 'bg-white text-indigo-600 shadow-lg shadow-indigo-500/5' 
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <Plus size={18} />
-              <span className="hidden sm:inline">{editingEmployee ? 'Edit Card' : 'Create Card'}</span>
-              <span className="sm:hidden">{editingEmployee ? 'Edit' : 'Add'}</span>
-            </button>
-            {isAdmin && (
+        {/* Navigation Tabs - Sticky */}
+        <div className="sticky top-20 md:top-24 z-40 py-4 mb-8 md:mb-10 bg-page/80 backdrop-blur-md -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex flex-wrap p-1.5 glass-card rounded-[24px] md:rounded-[32px] w-full lg:w-fit border border-white/50 shadow-xl shadow-indigo-500/5">
               <button
-                onClick={() => setActiveTab('users')}
+                onClick={() => { setActiveTab('list'); setEditingEmployee(null); }}
                 className={`flex-1 lg:flex-none flex items-center justify-center gap-2 md:gap-3 px-4 md:px-8 py-3 md:py-3.5 rounded-[18px] md:rounded-[24px] text-xs md:text-sm font-black transition-all ${
-                  activeTab === 'users' 
+                  activeTab === 'list' 
                     ? 'bg-white text-indigo-600 shadow-lg shadow-indigo-500/5' 
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <UserPlus size={18} />
-                <span className="hidden sm:inline">Access Control</span>
-                <span className="sm:hidden">Users</span>
+                <Users size={18} />
+                <span className="hidden sm:inline">Directory</span>
+                <span className="sm:hidden">List</span>
               </button>
-            )}
-            {isAuthorized && (
               <button
-                onClick={() => setActiveTab('settings')}
+                onClick={() => setActiveTab('add')}
                 className={`flex-1 lg:flex-none flex items-center justify-center gap-2 md:gap-3 px-4 md:px-8 py-3 md:py-3.5 rounded-[18px] md:rounded-[24px] text-xs md:text-sm font-black transition-all ${
-                  activeTab === 'settings' 
+                  activeTab === 'add' 
                     ? 'bg-white text-indigo-600 shadow-lg shadow-indigo-500/5' 
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <SettingsIcon size={18} />
-                <span className="hidden sm:inline">Settings</span>
-                <span className="sm:hidden">Setup</span>
+                <Plus size={18} />
+                <span className="hidden sm:inline">{editingEmployee ? 'Edit Card' : 'Create Card'}</span>
+                <span className="sm:hidden">{editingEmployee ? 'Edit' : 'Add'}</span>
               </button>
-            )}
-          </div>
+              {isAdmin && (
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`flex-1 lg:flex-none flex items-center justify-center gap-2 md:gap-3 px-4 md:px-8 py-3 md:py-3.5 rounded-[18px] md:rounded-[24px] text-xs md:text-sm font-black transition-all ${
+                    activeTab === 'users' 
+                      ? 'bg-white text-indigo-600 shadow-lg shadow-indigo-500/5' 
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <UserPlus size={18} />
+                  <span className="hidden sm:inline">Access Control</span>
+                  <span className="sm:hidden">Users</span>
+                </button>
+              )}
+              {isAuthorized && (
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`flex-1 lg:flex-none flex items-center justify-center gap-2 md:gap-3 px-4 md:px-8 py-3 md:py-3.5 rounded-[18px] md:rounded-[24px] text-xs md:text-sm font-black transition-all ${
+                    activeTab === 'settings' 
+                      ? 'bg-white text-indigo-600 shadow-lg shadow-indigo-500/5' 
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <SettingsIcon size={18} />
+                  <span className="hidden sm:inline">Settings</span>
+                  <span className="sm:hidden">Setup</span>
+                </button>
+              )}
+            </div>
 
-          <div className="hidden lg:flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-card-custom px-4 py-2 rounded-full border border-slate-100 shadow-sm">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            System Operational
+            <div className="hidden lg:flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-widest glass-card px-4 py-2 rounded-full border border-white/50 shadow-sm">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              System Operational
+            </div>
           </div>
         </div>
 
@@ -556,15 +559,16 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode, label:
   return (
     <motion.div 
       whileHover={{ y: -5 }}
-      className="bg-card-custom p-6 md:p-8 rounded-[24px] md:rounded-[32px] shadow-sm flex items-center gap-4 md:gap-6"
+      className="bg-card-custom p-3 sm:p-6 md:p-8 rounded-[20px] sm:rounded-[24px] md:rounded-[32px] shadow-sm flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 md:gap-6 aspect-square sm:aspect-auto border border-slate-100/50"
     >
-      <div className={`w-12 h-12 md:w-16 md:h-16 ${color} rounded-xl md:rounded-2xl flex items-center justify-center`}>
-        {React.cloneElement(icon as React.ReactElement<any>, { size: 24, className: (icon as any).props.className + ' md:hidden' })}
+      <div className={`w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 ${color} rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center shrink-0`}>
+        {React.cloneElement(icon as React.ReactElement<any>, { size: 16, className: (icon as any).props.className + ' sm:hidden' })}
+        {React.cloneElement(icon as React.ReactElement<any>, { size: 24, className: (icon as any).props.className + ' hidden sm:block md:hidden' })}
         {React.cloneElement(icon as React.ReactElement<any>, { size: 28, className: (icon as any).props.className + ' hidden md:block' })}
       </div>
-      <div>
-        <p className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">{label}</p>
-        <p className="text-xl md:text-3xl font-black text-slate-900">{value}</p>
+      <div className="text-center sm:text-left overflow-hidden w-full">
+        <p className="text-[6px] sm:text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1 truncate">{label}</p>
+        <p className="text-sm sm:text-xl md:text-3xl font-black text-slate-900">{value}</p>
       </div>
     </motion.div>
   );
