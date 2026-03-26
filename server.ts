@@ -2,7 +2,6 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
-import os from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,29 +31,8 @@ async function startServer() {
     });
   }
 
-  const HOST = "0.0.0.0";
-  app.listen(PORT, HOST, () => {
-    const nets = os.networkInterfaces();
-    const addresses: string[] = [];
-    Object.keys(nets).forEach((name) => {
-      const netInfo = nets[name] || [];
-      netInfo.forEach((net) => {
-        // prefer IPv4, non-internal
-        // `family` can be string or number depending on Node version
-        const family = typeof net.family === 'string' ? net.family : String(net.family);
-        if (family === 'IPv4' && !net.internal) {
-          addresses.push(net.address);
-        }
-      });
-    });
-
-    console.log(`Server running:`);
-    console.log(`- Local:   http://localhost:${PORT}`);
-    if (addresses.length) {
-      addresses.forEach((addr) => console.log(`- Network: http://${addr}:${PORT}`));
-    } else {
-      console.log('- Network: (no active network interfaces detected)');
-    }
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Local Server running on http://localhost:${PORT}`);
   });
 }
 
