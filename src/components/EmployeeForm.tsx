@@ -339,7 +339,20 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
               />
             </div>
           </div>
-          <div className="mt-6 flex flex-col items-center gap-3">
+          <div className="mt-6 flex flex-col items-center gap-4">
+            {photoPreview && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOriginalPhoto(photoPreview);
+                  setIsEditingPhoto(true);
+                }}
+                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all border border-indigo-100"
+              >
+                <Edit2 size={14} />
+                Edit Photo
+              </button>
+            )}
             <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest text-center">Passport Size (3:4 ratio)</p>
             <div className="h-1 w-12 bg-slate-100 rounded-full"></div>
             <p className="text-[10px] text-slate-300 font-medium">Max File Size: 500KB</p>

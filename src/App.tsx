@@ -372,7 +372,9 @@ function AppContent() {
 
           <div className="flex items-center gap-2 md:gap-6">
             <div className="flex flex-col items-end">
-              <span className="text-[10px] sm:text-xs md:text-sm font-black text-white truncate max-w-[80px] sm:max-w-none">{user.displayName}</span>
+              <span className="text-[10px] sm:text-xs md:text-sm font-black text-white truncate max-w-[80px] sm:max-w-none">
+                {user.displayName || user.email?.split('@')[0] || 'User'}
+              </span>
               <span className="text-[7px] sm:text-[8px] md:text-[10px] font-black text-indigo-300 uppercase tracking-widest mt-0.5">
                 {isAdmin ? 'Admin' : 'Staff'}
               </span>
