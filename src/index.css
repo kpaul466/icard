@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Times New Roman", Times, serif;
+}
+
+@layer base {
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    .print-container, .print-container * {
+      visibility: visible;
+    }
+    .print-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+  }
+}
+
+.border-right {
+  border-right-width: 1.5px;
+}
+
+@keyframes holographic {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.holographic-overlay {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.15) 25%, 
+    rgba(255, 0, 255, 0.08) 50%, 
+    rgba(0, 255, 255, 0.08) 75%, 
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 400% 400%;
+  animation: holographic 8s ease infinite;
+  mix-blend-mode: overlay;
+}
+
+.text-embossed {
+  text-shadow: 
+    -0.5px -0.5px 0px rgba(255, 255, 255, 0.4), 
+    0.5px 0.5px 0px rgba(0, 0, 0, 0.15);
+}
+
+.text-embossed-heavy {
+  text-shadow: 
+    -1px -1px 0px rgba(255, 255, 255, 0.5), 
+    1px 1px 0px rgba(0, 0, 0, 0.25);
+}
+
+body {
+  background-color: #f8fafc;
+  color: #1e293b;
+}

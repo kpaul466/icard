@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "Employee": {
+      "title": "Employee",
+      "description": "An employee working for a contractor at Falakata CCC.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the employee record."
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the employee."
+        },
+        "designation": {
+          "type": "string",
+          "description": "Job title or designation."
+        },
+        "agencyName": {
+          "type": "string",
+          "description": "Name of the contractor/agency."
+        },
+        "employeeId": {
+          "type": "string",
+          "description": "Internal ID provided by the agency."
+        },
+        "bloodGroup": {
+          "type": "string",
+          "description": "Blood group of the employee."
+        },
+        "contactNumber": {
+          "type": "string",
+          "description": "Contact phone number."
+        },
+        "photoUrl": {
+          "type": "string",
+          "description": "URL to the employee's photo."
+        },
+        "validUntil": {
+          "type": "string",
+          "description": "Validity date of the ID card."
+        },
+        "cccName": {
+          "type": "string",
+          "description": "Name of the Customer Care Center (e.g., Falakata CCC)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the record was created."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "UID of the user who created the record."
+        }
+      },
+      "required": ["name", "designation", "agencyName", "employeeId", "cccName"]
+    }
+  },
+  "firestore": {
+    "employees": {
+      "schema": "Employee",
+      "description": "Collection of employee records for ID card generation."
+    }
+  }
+}

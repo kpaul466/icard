@@ -1,0 +1,61 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: employees
+// Document ID: auto-generated
+// Fields:
+//   - name: string (required) - Full name
+//   - designation: string (required) - Job title
+//   - agencyName: string (required) - Contractor name
+//   - employeeId: string (required) - Agency ID
+//   - bloodGroup: string (optional) - Blood group
+//   - contactNumber: string (optional) - Phone
+//   - photoUrl: string (optional) - Photo URL
+//   - validUntil: string (optional) - Validity date
+//   - cccName: string (required) - CCC Name
+//   - createdAt: timestamp (required) - Creation time
+//   - createdBy: string (required) - User UID
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.createdBy;
+    }
+
+    function isValidEmployee(data) {
+      return data.keys().hasAll(['name', 'designation', 'agencyName', 'employeeId', 'cccName', 'createdAt', 'createdBy']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.designation is string && data.designation.size() > 0 && data.designation.size() < 100 &&
+             data.agencyName is string && data.agencyName.size() > 0 && data.agencyName.size() < 100 &&
+             data.employeeId is string && data.employeeId.size() > 0 && data.employeeId.size() < 50 &&
+             data.cccName is string && data.cccName.size() > 0 && data.cccName.size() < 100 &&
+             data.createdBy == request.auth.uid;
+    }
+
+    match /employees/{employeeId} {
+      // Allow authenticated users to read and write their own employee records
+      allow read: if isAuthenticated() && (resource == null || resource.data.createdBy == request.auth.uid);
+      allow create: if isAuthenticated() && isValidEmployee(request.resource.data);
+      allow update: if isAuthenticated() && isDocOwner() && isValidEmployee(request.resource.data);
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+    
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+  }
+}
