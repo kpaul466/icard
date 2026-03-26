@@ -257,21 +257,22 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       onSubmit={handleSubmit}
-      className="bg-white p-10 rounded-[48px] shadow-2xl shadow-indigo-500/5 border border-slate-100 space-y-10 max-w-5xl mx-auto relative overflow-hidden"
+      className="bg-form p-6 md:p-10 rounded-[32px] md:rounded-[48px] shadow-2xl shadow-indigo-500/5 space-y-8 md:space-y-10 max-w-5xl mx-auto relative overflow-hidden"
     >
       {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
 
-      <div className="flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl text-white flex items-center justify-center shadow-xl shadow-indigo-500/20">
-            {editingEmployee ? <Save size={28} /> : <Plus size={28} />}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+        <div className="flex items-center gap-4 md:gap-5">
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl md:rounded-2xl text-white flex items-center justify-center shadow-xl shadow-indigo-500/20">
+            {editingEmployee ? <Save size={24} className="md:hidden" /> : <Plus size={24} className="md:hidden" />}
+            {editingEmployee ? <Save size={28} className="hidden md:block" /> : <Plus size={28} className="hidden md:block" />}
           </div>
           <div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+            <h2 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">
               {editingEmployee ? 'Edit Personnel' : 'Register Personnel'}
             </h2>
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mt-1.5">Emergency Duty ID System</p>
+            <p className="text-slate-400 text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] mt-1 md:mt-1.5">Emergency Duty ID System</p>
           </div>
         </div>
 
@@ -279,19 +280,20 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
           <button
             type="button"
             onClick={onCancel}
-            className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-xs font-black hover:bg-slate-200 transition-all"
+            className="flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-slate-100 text-slate-600 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black hover:bg-slate-200 transition-all"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={14} className="md:hidden" />
+            <ArrowLeft size={16} className="hidden md:block" />
             Back to Directory
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 relative z-10">
         {/* Photo Upload Section */}
         <div className="lg:col-span-4 flex flex-col items-center">
-          <div className="relative group w-full max-w-[240px]">
-            <div className={`aspect-[3/4] rounded-[32px] border-2 border-dashed transition-all duration-500 flex flex-col items-center justify-center overflow-hidden bg-slate-50/50 ${photoPreview ? 'border-indigo-500 shadow-2xl shadow-indigo-500/10' : 'border-slate-200 hover:border-indigo-400 hover:bg-slate-50'}`}>
+          <div className="relative group w-full max-w-[200px] md:max-w-[240px]">
+            <div className={`aspect-[3/4] rounded-[24px] md:rounded-[32px] border-2 border-dashed transition-all duration-500 flex flex-col items-center justify-center overflow-hidden bg-slate-50/50 ${photoPreview ? 'border-indigo-500 shadow-2xl shadow-indigo-500/10' : 'border-slate-200 hover:border-indigo-400 hover:bg-slate-50'}`}>
               {photoPreview ? (
                 <div className="relative w-full h-full group">
                   <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
