@@ -40,7 +40,7 @@ service cloud.firestore {
       return isAuthenticated() &&
         ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-          (request.auth.token.email == "kkeshob@gmail.com" && request.auth.token.email_verified == true));
+          (request.auth.token.email.lower() == "kkeshob@gmail.com" && request.auth.token.email_verified == true));
     }
 
     function isAuthorized() {
@@ -54,6 +54,11 @@ service cloud.firestore {
              data.designation is string && data.designation.size() > 0 && data.designation.size() < 100 &&
              data.agencyName is string && data.agencyName.size() > 0 && data.agencyName.size() < 100 &&
              data.cccName is string && data.cccName.size() > 0 && data.cccName.size() < 200;
+    }
+
+    // Test collection for connection validation
+    match /test/connection {
+      allow read: if true;
     }
 
     match /employees/{employeeId} {

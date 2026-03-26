@@ -59,7 +59,17 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   throw new Error(JSON.stringify(errInfo));
 }
 
+import { ErrorBoundary } from './components/ErrorBoundary';
+
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
+  );
+}
+
+function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -96,6 +106,8 @@ export default function App() {
         setGlobalSettings(defaultSettings);
         localStorage.setItem('id-portal-global-settings', JSON.stringify(defaultSettings));
       }
+    }, (error) => {
+      console.error("Global Settings Snapshot Error:", error);
     });
     return () => unsubscribe();
   }, [user]);
@@ -122,6 +134,8 @@ export default function App() {
       }
       setSettings(newSettings);
       localStorage.setItem('id-portal-user-settings', JSON.stringify(newSettings));
+    }, (error) => {
+      console.error("User Settings Snapshot Error:", error);
     });
     return () => unsubscribe();
   }, [user, globalSettings]);
@@ -133,28 +147,37 @@ export default function App() {
         const isBootstrapAdmin = u.email === 'kkeshob@gmail.com' && u.emailVerified;
         
         // Check Firestore for user role
-        let userDoc = await getDoc(doc(db, 'users', u.uid));
-        let userData = userDoc.data();
+        let userData: any = null;
+        try {
+          const userDoc = await getDoc(doc(db, 'users', u.uid));
+          userData = userDoc.data();
+        } catch (error) {
+          console.error("Error fetching user doc:", error);
+        }
         
         // If not found by UID, check by email (for pre-authorized users)
         if (!userData && u.email) {
-          const q = query(collection(db, 'users'), where('email', '==', u.email.toLowerCase()));
-          const querySnapshot = await getDocs(q);
-          if (!querySnapshot.empty) {
-            const preAuthDoc = querySnapshot.docs[0];
-            userData = preAuthDoc.data();
-            
-            // Migrate to UID-based document for future efficiency
-            try {
-              await setDoc(doc(db, 'users', u.uid), {
-                ...userData,
-                updatedAt: new Date()
-              });
-              // Optionally delete the old random-ID doc
-              await deleteDoc(doc(db, 'users', preAuthDoc.id));
-            } catch (e) {
-              console.error("Error migrating user doc:", e);
+          try {
+            const q = query(collection(db, 'users'), where('email', '==', u.email.toLowerCase()));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+              const preAuthDoc = querySnapshot.docs[0];
+              userData = preAuthDoc.data();
+              
+              // Migrate to UID-based document for future efficiency
+              try {
+                await setDoc(doc(db, 'users', u.uid), {
+                  ...userData,
+                  updatedAt: new Date()
+                });
+                // Optionally delete the old random-ID doc
+                await deleteDoc(doc(db, 'users', preAuthDoc.id));
+              } catch (e) {
+                console.error("Error migrating user doc:", e);
+              }
             }
+          } catch (error) {
+            console.error("Error searching user by email:", error);
           }
         }
 
@@ -506,7 +529,7 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode, label:
       className="bg-white p-8 rounded-[32px] border border-slate-200/60 shadow-sm flex items-center gap-6"
     >
       <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center`}>
-        {React.cloneElement(icon as React.ReactElement, { size: 28 })}
+        {React.cloneElement(icon as React.ReactElement<any>, { size: 28 })}
       </div>
       <div>
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>

@@ -118,6 +118,9 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
       } catch (error) {
         if(error instanceof Error && error.message.includes('the client is offline')) {
           console.error("Please check your Firebase configuration. ");
+        } else if (error instanceof Error && error.message.includes('permission')) {
+          // This is expected if rules are not yet updated for 'test' collection
+          console.log("Firestore connection test: Permission denied (expected if rules not updated)");
         }
       }
     }
