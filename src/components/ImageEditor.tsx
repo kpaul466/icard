@@ -40,9 +40,19 @@ export function ImageEditor({ image, onSave, onCancel }: ImageEditorProps) {
 
     if (!ctx) return;
 
-    // Set canvas size to the cropped area size
-    canvas.width = croppedAreaPixels.width;
-    canvas.height = croppedAreaPixels.height;
+    // Cap dimensions to 800x800 to keep Firestore document size small
+    const MAX_DIM = 800;
+    let targetW = croppedAreaPixels.width;
+    let targetH = croppedAreaPixels.height;
+
+    if (targetW > MAX_DIM || targetH > MAX_DIM) {
+      const ratio = Math.min(MAX_DIM / targetW, MAX_DIM / targetH);
+      targetW = Math.round(targetW * ratio);
+      targetH = Math.round(targetH * ratio);
+    }
+
+    canvas.width = targetW;
+    canvas.height = targetH;
 
     // Apply filters
     ctx.filter = `brightness(${brightness}%) saturate(${saturation}%) hue-rotate(${hue}deg)`;
@@ -78,8 +88,8 @@ export function ImageEditor({ image, onSave, onCancel }: ImageEditorProps) {
       croppedAreaPixels.height,
       0,
       0,
-      croppedAreaPixels.width,
-      croppedAreaPixels.height
+      targetW,
+      targetH
     );
 
     return canvas.toDataURL('image/jpeg', 0.9);

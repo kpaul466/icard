@@ -15,15 +15,25 @@ interface EmployeeListProps {
   onDelete: () => void;
   onEdit: (employee: Employee) => void;
   settings: any;
+  isLoading?: boolean;
 }
 
-export function EmployeeList({ employees, onDelete, onEdit, settings }: EmployeeListProps) {
+export function EmployeeList({ employees, onDelete, onEdit, settings, isLoading }: EmployeeListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredEmployees = employees.filter(emp => 
     emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.agencyName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-20 gap-4">
+        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Loading records...</p>
+      </div>
+    );
+  }
 
   if (employees.length === 0) {
     return (

@@ -75,6 +75,7 @@ function AppContent() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isEmployeesLoading, setIsEmployeesLoading] = useState(true);
   const [settings, setSettings] = useState<any>(() => {
     const cached = localStorage.getItem('id-portal-user-settings');
     return cached ? JSON.parse(cached) : null;
@@ -141,75 +142,82 @@ function AppContent() {
   }, [user, globalSettings]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      if (u) {
-        // Bootstrap admin check
-        const isBootstrapAdmin = u.email === 'kkeshob@gmail.com' && u.emailVerified;
-        
-        // Check Firestore for user role
-        let userData: any = null;
-        try {
-          const userDoc = await getDoc(doc(db, 'users', u.uid));
-          userData = userDoc.data();
-        } catch (error) {
-          console.error("Error fetching user doc:", error);
-        }
-        
-        // If not found by UID, check by email (for pre-authorized users)
-        if (!userData && u.email) {
-          try {
-            const q = query(collection(db, 'users'), where('email', '==', u.email.toLowerCase()));
-            const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-              const preAuthDoc = querySnapshot.docs[0];
-              userData = preAuthDoc.data();
-              
-              // Migrate to UID-based document for future efficiency
-              try {
-                await setDoc(doc(db, 'users', u.uid), {
-                  ...userData,
-                  updatedAt: new Date()
-                });
-                // Optionally delete the old random-ID doc
-                await deleteDoc(doc(db, 'users', preAuthDoc.id));
-              } catch (e) {
-                console.error("Error migrating user doc:", e);
-              }
-            }
-          } catch (error) {
-            console.error("Error searching user by email:", error);
-          }
-        }
-
-        const authorized = isBootstrapAdmin || !!userData;
-        const admin = isBootstrapAdmin || userData?.role === 'admin';
-
-        // Auto-create user doc for bootstrap admin if it doesn't exist
-        if (isBootstrapAdmin && !userData) {
-          try {
-            await setDoc(doc(db, 'users', u.uid), {
-              email: u.email,
-              name: u.displayName,
-              role: 'admin',
-              createdAt: new Date()
-            });
-          } catch (error) {
-            handleFirestoreError(error, OperationType.WRITE, `users/${u.uid}`);
-          }
-        }
-
-        setIsAuthorized(authorized);
-        setIsAdmin(admin);
-        setUser(u);
-      } else {
-        setUser(null);
+    const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      if (!u) {
         setIsAuthorized(false);
         setIsAdmin(false);
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setLoading(true);
+    const isBootstrapAdmin = user.email === 'kkeshob@gmail.com' && user.emailVerified;
+
+    // Listen to the user's document for role/authorization
+    const unsubscribeUser = onSnapshot(doc(db, 'users', user.uid), async (snapshot) => {
+      let userData = snapshot.data();
+
+      // If not found by UID, check by email (for pre-authorized users)
+      if (!userData && user.email) {
+        try {
+          const q = query(collection(db, 'users'), where('email', '==', user.email.toLowerCase()));
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            const preAuthDoc = querySnapshot.docs[0];
+            userData = preAuthDoc.data();
+            
+            // Migrate to UID-based document
+            await setDoc(doc(db, 'users', user.uid), {
+              ...userData,
+              updatedAt: new Date()
+            });
+            await deleteDoc(doc(db, 'users', preAuthDoc.id));
+          }
+        } catch (error) {
+          console.error("Error searching user by email:", error);
+        }
+      }
+
+      const authorized = isBootstrapAdmin || !!userData;
+      const admin = isBootstrapAdmin || userData?.role === 'admin';
+
+      // Auto-create user doc for bootstrap admin if it doesn't exist
+      if (isBootstrapAdmin && !userData) {
+        try {
+          await setDoc(doc(db, 'users', user.uid), {
+            email: user.email,
+            name: user.displayName,
+            role: 'admin',
+            createdAt: new Date()
+          });
+        } catch (error) {
+          console.error("Error creating bootstrap admin doc:", error);
+        }
+      }
+
+      setIsAuthorized(authorized);
+      setIsAdmin(admin);
+      setLoading(false);
+    }, (error) => {
+      console.error("User Doc Snapshot Error:", error);
+      // Even if snapshot fails (e.g. permission denied because doc doesn't exist yet),
+      // we still check bootstrap admin
+      if (isBootstrapAdmin) {
+        setIsAuthorized(true);
+        setIsAdmin(true);
       }
       setLoading(false);
     });
-    return () => unsubscribe();
-  }, []);
+
+    return () => unsubscribeUser();
+  }, [user]);
 
   useEffect(() => {
     if (!user || !isAuthorized) {
@@ -217,24 +225,40 @@ function AppContent() {
       return;
     }
 
-    const q = query(
-      collection(db, 'employees'),
-      where('createdBy', '==', user.uid),
-      orderBy('createdAt', 'desc')
-    );
+    const employeesRef = collection(db, 'employees');
+    let q;
 
+    if (isAdmin) {
+      // Admins see everything
+      q = query(employeesRef, orderBy('createdAt', 'desc'));
+    } else {
+      // Regular users only see their own
+      q = query(
+        employeesRef,
+        where('createdBy', '==', user.uid),
+        orderBy('createdAt', 'desc')
+      );
+    }
+
+    setIsEmployeesLoading(true);
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const emps = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Employee[];
       setEmployees(emps);
+      setIsEmployeesLoading(false);
     }, (error) => {
       console.error("Firestore Error:", error);
+      setIsEmployeesLoading(false);
+      // If index is missing for the filtered query, fallback to a simpler one or show error
+      if (error.message.includes('index')) {
+        console.warn("Composite index might be missing. Please check Firebase console.");
+      }
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, isAdmin, isAuthorized]);
 
   const handleEdit = (employee: Employee) => {
     setEditingEmployee(employee);
@@ -469,6 +493,7 @@ function AppContent() {
                 onDelete={() => {}} 
                 onEdit={handleEdit}
                 settings={settings}
+                isLoading={isEmployeesLoading}
               />
             </motion.div>
           ) : activeTab === 'add' ? (
