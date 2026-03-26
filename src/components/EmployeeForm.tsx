@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { db, auth } from '../firebase';
-import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, serverTimestamp, Bytes } from 'firebase/firestore';
 import { Employee } from '../types';
+import { getPhotoUrl } from '../lib/firebaseUtils';
 import { 
   Plus, 
   User, 
@@ -71,15 +72,15 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
         issueNo: editingEmployee.issueNo || '',
         issueDate: editingEmployee.issueDate || new Date().toISOString().split('T')[0],
       });
-      setPhotoPreview(editingEmployee.photoUrl || null);
+      setPhotoPreview(getPhotoUrl(editingEmployee.photoUrl) || null);
     }
   }, [editingEmployee]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 500000) { // 500KB limit for base64 in Firestore
-        alert('File is too large. Please choose an image under 500KB.');
+      if (file.size > 800000) { // Firestore limit is 1MB, keeping it safe
+        alert('File is too large. Please choose an image under 800KB.');
         return;
       }
       
@@ -87,7 +88,11 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel }: EmployeeF
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setPhotoPreview(base64String);
-        setFormData(prev => ({ ...prev, photoUrl: base64String }));
+        
+        // Convert base64 to Bytes for Firestore
+        const base64Data = base64String.split(',')[1];
+        const bytes = Bytes.fromBase64String(base64Data);
+        setFormData(prev => ({ ...prev, photoUrl: bytes as any }));
       };
       reader.readAsDataURL(file);
     }

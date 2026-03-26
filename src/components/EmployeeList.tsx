@@ -8,6 +8,7 @@ import { doc, deleteDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { toPng, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
+import { getPhotoUrl } from '../lib/firebaseUtils';
 
 interface EmployeeListProps {
   employees: Employee[];
@@ -156,8 +157,8 @@ const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onE
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-5">
           <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner">
-            {employee.photoUrl ? (
-              <img src={employee.photoUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            {getPhotoUrl(employee.photoUrl) ? (
+              <img src={getPhotoUrl(employee.photoUrl)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-300">
                 <Users size={24} />

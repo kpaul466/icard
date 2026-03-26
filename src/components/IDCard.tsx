@@ -1,11 +1,14 @@
 import React, { forwardRef } from 'react';
 import { Employee } from '../types';
+import { getPhotoUrl } from '../lib/firebaseUtils';
 
 interface IDCardProps {
   employee: Employee;
 }
 
 export const IDCard = forwardRef<HTMLDivElement, IDCardProps>(({ employee }, ref) => {
+  const photoUrl = getPhotoUrl(employee.photoUrl);
+  
   return (
     <div
       ref={ref}
@@ -64,8 +67,8 @@ export const IDCard = forwardRef<HTMLDivElement, IDCardProps>(({ employee }, ref
             {/* Photo Frame with Glow */}
             <div className="absolute -inset-1 bg-gradient-to-br from-indigo-500 to-pink-500 rounded-[14px] blur-[2px] opacity-20"></div>
             <div className="w-[22mm] h-[28mm] bg-white border border-slate-100 rounded-[12px] overflow-hidden shadow-xl flex items-center justify-center relative z-10">
-              {employee.photoUrl ? (
-                <img src={employee.photoUrl} alt="Photo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              {photoUrl ? (
+                <img src={photoUrl} alt="Photo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
                 <div className="text-slate-200 text-[7px] text-center px-2 font-black uppercase tracking-widest">No Photo</div>
               )}
