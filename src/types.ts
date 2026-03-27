@@ -14,6 +14,7 @@ export interface Employee {
   issueDate?: string;
   createdAt: any; // Firestore Timestamp
   createdBy: string;
+  creatorEmail?: string;
   // Settings snapshot
   officePhone?: string;
   officeEmail?: string;

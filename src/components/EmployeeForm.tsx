@@ -100,7 +100,11 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
     address: editingEmployee?.address || '',
     designation: editingEmployee?.designation || 'AGENCY STAFF',
     agencyName: editingEmployee?.agencyName || '',
-    cccName: editingEmployee?.cccName || 'Falakata Customer Care Center, Falakata, Alipurduar',
+    cccName: editingEmployee?.cccName || settings?.cccName || 'Falakata Customer Care Center, Falakata, Alipurduar',
+    officePhone: editingEmployee?.officePhone || settings?.officePhone || '9332789274',
+    officeEmail: editingEmployee?.officeEmail || settings?.officeEmail || 'sm.falakata@wbsedcl.in',
+    issuingAuthority: editingEmployee?.issuingAuthority || settings?.issuingAuthority || 'Asst. Engg & Station Manager\nFalakata CCC, WBSEDCL',
+    emergencyTag: editingEmployee?.emergencyTag || settings?.emergencyTag || 'ON EMERGENCY DUTY',
     bloodGroup: editingEmployee?.bloodGroup || '',
     contactNumber: editingEmployee?.contactNumber || '',
     photoUrl: editingEmployee?.photoUrl || '',
@@ -134,7 +138,11 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
         address: editingEmployee.address || '',
         designation: editingEmployee.designation,
         agencyName: editingEmployee.agencyName,
-        cccName: editingEmployee.cccName || 'Falakata Customer Care Center, Falakata, Alipurduar',
+        cccName: editingEmployee.cccName || settings?.cccName || 'Falakata Customer Care Center, Falakata, Alipurduar',
+        officePhone: editingEmployee.officePhone || settings?.officePhone || '9332789274',
+        officeEmail: editingEmployee.officeEmail || settings?.officeEmail || 'sm.falakata@wbsedcl.in',
+        issuingAuthority: editingEmployee.issuingAuthority || settings?.issuingAuthority || 'Asst. Engg & Station Manager\nFalakata CCC, WBSEDCL',
+        emergencyTag: editingEmployee.emergencyTag || settings?.emergencyTag || 'ON EMERGENCY DUTY',
         bloodGroup: editingEmployee.bloodGroup || '',
         contactNumber: editingEmployee.contactNumber || '',
         photoUrl: editingEmployee.photoUrl || '',
@@ -200,12 +208,6 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
             createdAt: serverTimestamp(),
             createdBy: auth.currentUser.uid,
             creatorEmail: auth.currentUser.email,
-            // Capture current settings snapshot
-            officePhone: settings?.officePhone || '',
-            officeEmail: settings?.officeEmail || '',
-            issuingAuthority: settings?.issuingAuthority || '',
-            emergencyTag: settings?.emergencyTag || '',
-            cccName: settings?.cccName || '',
           });
         } catch (error) {
           handleFirestoreError(error, OperationType.CREATE, 'employees');
@@ -218,7 +220,11 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
           address: '',
           designation: 'AGENCY STAFF',
           agencyName: '',
-          cccName: 'Falakata Customer Care Center, Falakata, Alipurduar',
+          cccName: settings?.cccName || 'Falakata Customer Care Center, Falakata, Alipurduar',
+          officePhone: settings?.officePhone || '9332789274',
+          officeEmail: settings?.officeEmail || 'sm.falakata@wbsedcl.in',
+          issuingAuthority: settings?.issuingAuthority || 'Asst. Engg & Station Manager\nFalakata CCC, WBSEDCL',
+          emergencyTag: settings?.emergencyTag || 'ON EMERGENCY DUTY',
           bloodGroup: '',
           contactNumber: '',
           photoUrl: '',
@@ -371,7 +377,6 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
 
           <InputGroup icon={<Briefcase size={18} />} label="Designation" name="designation" value={formData.designation} onChange={handleChange} required placeholder="AGENCY STAFF" />
           <InputGroup icon={<Building size={18} />} label="Agency Name" name="agencyName" value={formData.agencyName} onChange={handleChange} required placeholder="e.g. DAS ELECTRICAL" />
-          <InputGroup icon={<Building size={18} />} label="CCC Name" name="cccName" value={formData.cccName} onChange={handleChange} required placeholder="e.g. Falakata CCC" />
           
           <InputGroup icon={<Phone size={18} />} label="Contact Number" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="10-digit mobile number" />
 
@@ -381,7 +386,79 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
           <InputGroup icon={<Calendar size={18} />} label="Issue Date" name="issueDate" type="date" value={formData.issueDate} onChange={handleChange} />
           <InputGroup icon={<Calendar size={18} />} label="Valid Until" name="validUntil" type="date" value={formData.validUntil} onChange={handleChange} />
 
-             </div>
+          {/* Card Header Customization (Fixed Data) */}
+          <div className="md:col-span-2 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 space-y-6 mt-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                <ShieldCheck size={18} />
+              </div>
+              <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Card Header & Purpose (Fixed for this Card)</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Building size={12} /> CCC Name / Header
+                </label>
+                <input
+                  type="text"
+                  value={formData.cccName}
+                  onChange={(e) => setFormData({ ...formData, cccName: e.target.value })}
+                  className="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-bold text-sm transition-all"
+                  placeholder="e.g. Falakata CCC"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <CheckCircle2 size={12} /> Card Purpose / Tag
+                </label>
+                <input
+                  type="text"
+                  value={formData.emergencyTag}
+                  onChange={(e) => setFormData({ ...formData, emergencyTag: e.target.value })}
+                  className="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-bold text-sm transition-all"
+                  placeholder="e.g. ON EMERGENCY DUTY"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Phone size={12} /> Office Phone
+                </label>
+                <input
+                  type="text"
+                  value={formData.officePhone}
+                  onChange={(e) => setFormData({ ...formData, officePhone: e.target.value })}
+                  className="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-bold text-sm transition-all"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Globe size={12} /> Office Email
+                </label>
+                <input
+                  type="text"
+                  value={formData.officeEmail}
+                  onChange={(e) => setFormData({ ...formData, officeEmail: e.target.value })}
+                  className="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-bold text-sm transition-all"
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Edit2 size={12} /> Issuing Authority
+                </label>
+                <textarea
+                  value={formData.issuingAuthority}
+                  onChange={(e) => setFormData({ ...formData, issuingAuthority: e.target.value })}
+                  className="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-bold text-sm transition-all min-h-[80px]"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="pt-10 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
