@@ -5,7 +5,7 @@ import { collection, query, where, onSnapshot, orderBy, doc, getDoc, setDoc, add
 import { Employee } from './types';
 import { EmployeeForm } from './components/EmployeeForm';
 import { EmployeeList } from './components/EmployeeList';
-import { LogIn, LogOut, ShieldCheck, CreditCard, Users, Calendar, Plus, ShieldAlert, UserPlus, Edit2, Trash2, X, Settings as SettingsIcon } from 'lucide-react';
+import { LogIn, LogOut, ShieldCheck, CreditCard, Users, Calendar, Plus, ShieldAlert, UserPlus, Edit2, Trash2, X, Settings as SettingsIcon, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 enum OperationType {
@@ -86,6 +86,33 @@ function AppContent() {
   });
   const [activeTab, setActiveTab] = useState<'list' | 'add' | 'users' | 'settings'>('list');
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('beforeinstallprompt event fired');
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstallable(false);
+    }
+    setDeferredPrompt(null);
+  };
 
   // Default hardcoded settings
   const defaultSettings = {
@@ -380,6 +407,16 @@ function AppContent() {
               </span>
             </div>
             <div className="h-8 w-px bg-white/10 hidden sm:block"></div>
+            {isInstallable && (
+              <button
+                onClick={handleInstallClick}
+                className="flex items-center gap-1.5 md:gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl transition-all font-bold text-[10px] md:text-xs"
+                title="Install App"
+              >
+                <Download size={14} className="md:w-4 md:h-4" />
+                <span className="hidden sm:inline">Install</span>
+              </button>
+            )}
             <button
               onClick={logout}
               className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-indigo-200 hover:text-white hover:bg-white/10 rounded-xl md:rounded-2xl transition-all group"

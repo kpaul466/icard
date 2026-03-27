@@ -42,7 +42,11 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+        includeAssets: ['mask-icon.svg'],
+        devOptions: {
+          enabled: true,
+          type: 'module',
+        },
         manifest: {
           name: 'Falakata CCC ID Management',
           short_name: 'Falakata CCC',
@@ -54,13 +58,25 @@ export default defineConfig(({mode}) => {
           icons: [
             {
               src: 'mask-icon.svg',
-              sizes: 'any',
+              sizes: '192x192',
               type: 'image/svg+xml',
               purpose: 'any'
             },
             {
               src: 'mask-icon.svg',
-              sizes: 'any',
+              sizes: '512x512',
+              type: 'image/svg+xml',
+              purpose: 'any'
+            },
+            {
+              src: 'mask-icon.svg',
+              sizes: '192x192',
+              type: 'image/svg+xml',
+              purpose: 'maskable'
+            },
+            {
+              src: 'mask-icon.svg',
+              sizes: '512x512',
               type: 'image/svg+xml',
               purpose: 'maskable'
             }
