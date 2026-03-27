@@ -15,15 +15,17 @@ interface EmployeeListProps {
   onDelete: () => void;
   onEdit: (employee: Employee) => void;
   settings: any;
+  isAdmin?: boolean;
   isLoading?: boolean;
 }
 
-export function EmployeeList({ employees, onDelete, onEdit, settings, isLoading }: EmployeeListProps) {
+export function EmployeeList({ employees, onDelete, onEdit, settings, isAdmin, isLoading }: EmployeeListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredEmployees = employees.filter(emp => 
     emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    emp.agencyName.toLowerCase().includes(searchQuery.toLowerCase())
+    emp.agencyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (isAdmin && emp.createdBy?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   if (isLoading) {
@@ -80,14 +82,14 @@ export function EmployeeList({ employees, onDelete, onEdit, settings, isLoading 
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {filteredEmployees.map((employee, index) => (
-          <EmployeeListItem key={employee.id || index} employee={employee} onDelete={onDelete} onEdit={onEdit} index={index} settings={settings} />
+          <EmployeeListItem key={employee.id || index} employee={employee} onDelete={onDelete} onEdit={onEdit} index={index} settings={settings} isAdmin={isAdmin} />
         ))}
       </div>
     </div>
   );
 }
 
-const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onEdit: (employee: Employee) => void; index: number; settings: any }> = ({ employee, onDelete, onEdit, index, settings }) => {
+const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onEdit: (employee: Employee) => void; index: number; settings: any; isAdmin?: boolean }> = ({ employee, onDelete, onEdit, index, settings, isAdmin }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -183,6 +185,12 @@ const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onE
               <span className="text-[8px] md:text-[10px] font-black text-indigo-500 uppercase tracking-widest">{employee.designation}</span>
               <span className="hidden sm:block w-1 h-1 bg-slate-200 rounded-full"></span>
               <span className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tight">{employee.agencyName}</span>
+              {isAdmin && employee.createdBy && (
+                <>
+                  <span className="hidden sm:block w-1 h-1 bg-slate-200 rounded-full"></span>
+                  <span className="text-[8px] md:text-[10px] font-bold text-indigo-400/60 uppercase tracking-tight">Created by: {employee.createdBy.split('@')[0]}</span>
+                </>
+              )}
             </div>
           </div>
         </div>

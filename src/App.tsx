@@ -149,7 +149,11 @@ function AppContent() {
     const unsubscribe = onSnapshot(doc(db, 'users', user.uid), (snapshot) => {
       const userData = snapshot.data();
       let newSettings;
-      if (userData && (userData.officePhone || userData.officeEmail || userData.issuingAuthority || userData.emergencyTag || userData.cccName)) {
+      
+      // If admin, prioritize global settings for a consistent "Master" view
+      if (isAdmin) {
+        newSettings = globalSettings || defaultSettings;
+      } else if (userData && (userData.officePhone || userData.officeEmail || userData.issuingAuthority || userData.emergencyTag || userData.cccName)) {
         newSettings = {
           officePhone: userData.officePhone || globalSettings?.officePhone || defaultSettings.officePhone,
           officeEmail: userData.officeEmail || globalSettings?.officeEmail || defaultSettings.officeEmail,
@@ -166,7 +170,7 @@ function AppContent() {
       console.error("User Settings Snapshot Error:", error);
     });
     return () => unsubscribe();
-  }, [user, globalSettings]);
+  }, [user, globalSettings, isAdmin]);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
@@ -535,6 +539,7 @@ function AppContent() {
                 onDelete={() => {}} 
                 onEdit={handleEdit}
                 settings={settings}
+                isAdmin={isAdmin}
                 isLoading={isEmployeesLoading}
               />
             </motion.div>
