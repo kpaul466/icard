@@ -199,6 +199,7 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
             ...formData,
             createdAt: serverTimestamp(),
             createdBy: auth.currentUser.uid,
+            creatorEmail: auth.currentUser.email,
             // Capture current settings snapshot
             officePhone: settings?.officePhone || '',
             officeEmail: settings?.officeEmail || '',

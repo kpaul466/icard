@@ -25,7 +25,8 @@ export function EmployeeList({ employees, onDelete, onEdit, settings, isAdmin, i
   const filteredEmployees = employees.filter(emp => 
     emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.agencyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (isAdmin && emp.createdBy?.toLowerCase().includes(searchQuery.toLowerCase()))
+    emp.createdBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (emp.creatorEmail && emp.creatorEmail.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   if (isLoading) {
@@ -185,10 +186,12 @@ const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onE
               <span className="text-[8px] md:text-[10px] font-black text-indigo-500 uppercase tracking-widest">{employee.designation}</span>
               <span className="hidden sm:block w-1 h-1 bg-slate-200 rounded-full"></span>
               <span className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tight">{employee.agencyName}</span>
-              {isAdmin && employee.createdBy && (
+              {employee.creatorEmail && (
                 <>
                   <span className="hidden sm:block w-1 h-1 bg-slate-200 rounded-full"></span>
-                  <span className="text-[8px] md:text-[10px] font-bold text-indigo-400/60 uppercase tracking-tight">Created by: {employee.createdBy.split('@')[0]}</span>
+                  <span className="text-[8px] md:text-[10px] font-bold text-indigo-400/60 uppercase tracking-tight" title={`Created by: ${employee.creatorEmail}`}>
+                    By: {employee.creatorEmail.split('@')[0]}
+                  </span>
                 </>
               )}
             </div>

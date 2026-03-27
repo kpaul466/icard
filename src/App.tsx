@@ -257,19 +257,8 @@ function AppContent() {
     }
 
     const employeesRef = collection(db, 'employees');
-    let q;
-
-    if (isAdmin) {
-      // Admins see everything
-      q = query(employeesRef, orderBy('createdAt', 'desc'));
-    } else {
-      // Regular users only see their own
-      q = query(
-        employeesRef,
-        where('createdBy', '==', user.uid),
-        orderBy('createdAt', 'desc')
-      );
-    }
+    // All authorized users can see all records to avoid duplicates
+    const q = query(employeesRef, orderBy('createdAt', 'desc'));
 
     setIsEmployeesLoading(true);
     const unsubscribe = onSnapshot(q, (snapshot) => {
