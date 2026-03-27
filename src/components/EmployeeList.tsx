@@ -186,7 +186,7 @@ const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onE
               <span className="text-[8px] md:text-[10px] font-black text-indigo-500 uppercase tracking-widest">{employee.designation}</span>
               <span className="hidden sm:block w-1 h-1 bg-slate-200 rounded-full"></span>
               <span className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tight">{employee.agencyName}</span>
-              {employee.creatorEmail && (
+              {isAdmin && employee.creatorEmail && (
                 <>
                   <span className="hidden sm:block w-1 h-1 bg-slate-200 rounded-full"></span>
                   <span className="text-[8px] md:text-[10px] font-bold text-indigo-400/60 uppercase tracking-tight" title={`Created by: ${employee.creatorEmail}`}>

@@ -62,8 +62,8 @@ service cloud.firestore {
     }
 
     match /employees/{employeeId} {
-      // Allow authorized users to read and write their own employee records
-      allow read: if isAuthorized();
+      // Allow authorized users to read their own employee records or all if admin
+      allow read: if isAuthorized() && (resource.data.createdBy == request.auth.uid || isAdmin());
       allow create: if isAuthorized() && 
                     isValidEmployee(request.resource.data) && 
                     request.resource.data.createdBy == request.auth.uid;
