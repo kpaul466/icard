@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -36,7 +37,37 @@ export default defineConfig(({mode}) => {
 
   return {
     base: './',
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(), 
+      tailwindcss(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+        manifest: {
+          name: 'Falakata CCC ID Management',
+          short_name: 'Falakata CCC',
+          description: 'Employee ID Management Portal for Falakata Customer Care Center',
+          theme_color: '#4f46e5',
+          background_color: '#ffffff',
+          display: 'standalone',
+          start_url: '/',
+          icons: [
+            {
+              src: 'mask-icon.svg',
+              sizes: 'any',
+              type: 'image/svg+xml',
+              purpose: 'any'
+            },
+            {
+              src: 'mask-icon.svg',
+              sizes: 'any',
+              type: 'image/svg+xml',
+              purpose: 'maskable'
+            }
+          ]
+        }
+      })
+    ],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(finalEnv.GEMINI_API_KEY),
       'import.meta.env.VITE_FIREBASE_API_KEY': JSON.stringify(finalEnv.VITE_FIREBASE_API_KEY),
