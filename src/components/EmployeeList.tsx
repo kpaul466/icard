@@ -100,6 +100,7 @@ const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onE
   const cardRef = useRef<HTMLDivElement>(null);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   
   const handlePrint = useReactToPrint({
     contentRef: cardRef,
@@ -175,8 +176,11 @@ const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onE
       className="bg-card-custom p-6 md:p-8 rounded-[32px] md:rounded-[40px] shadow-sm flex flex-col gap-6 md:gap-8 group hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500"
     >
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-        <div className="flex items-center gap-4 md:gap-5">
-          <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner shrink-0">
+        <div 
+          className="flex items-center gap-4 md:gap-5 cursor-pointer select-none group/header"
+          onClick={() => setShowActions(!showActions)}
+        >
+          <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner shrink-0 group-hover/header:scale-105 transition-transform">
             {getPhotoUrl(employee.photoUrl) ? (
               <img src={getPhotoUrl(employee.photoUrl)} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             ) : (
@@ -187,7 +191,15 @@ const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onE
             )}
           </div>
           <div>
-            <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">{employee.name}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">{employee.name}</h3>
+              <motion.div
+                animate={{ rotate: showActions ? 180 : 0 }}
+                className="text-slate-400"
+              >
+                <ChevronDown size={18} />
+              </motion.div>
+            </div>
             <div className="flex flex-wrap items-center gap-2 mt-1">
               <span className="text-[8px] md:text-[10px] font-black text-indigo-500 uppercase tracking-widest">{employee.designation}</span>
               <span className="hidden sm:block w-1 h-1 bg-slate-200 rounded-full"></span>
@@ -204,88 +216,97 @@ const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onE
           </div>
         </div>
         
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <button
-            onClick={() => onEdit(employee)}
-            className="flex-1 sm:flex-none w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-amber-50 text-amber-600 rounded-xl md:rounded-2xl hover:bg-amber-600 hover:text-white transition-all duration-300 shadow-sm"
-            title="Edit Record"
-          >
-            <Plus size={18} className="rotate-45 md:hidden" />
-            <Plus size={20} className="rotate-45 hidden md:block" />
-          </button>
-          <div className="relative flex-1 sm:flex-none">
-            <button
-              onClick={() => setIsDownloadOpen(!isDownloadOpen)}
-              disabled={isDownloading}
-              className="w-full sm:w-12 h-10 md:h-12 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl md:rounded-2xl hover:bg-indigo-600 hover:text-white transition-all duration-300 shadow-sm disabled:opacity-50"
-              title="Download Options"
+        <AnimatePresence>
+          {showActions && (
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="flex flex-wrap gap-2 w-full sm:w-auto"
             >
-              {isDownloading ? (
-                <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <Download size={18} className="md:hidden" />
-                  <Download size={20} className="hidden md:block" />
-                </>
-              )}
-            </button>
-            
-            <AnimatePresence>
-              {isDownloadOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-50"
+              <button
+                onClick={() => onEdit(employee)}
+                className="flex-1 sm:flex-none w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-amber-50 text-amber-600 rounded-xl md:rounded-2xl hover:bg-amber-600 hover:text-white transition-all duration-300 shadow-sm"
+                title="Edit Record"
+              >
+                <Plus size={18} className="rotate-45 md:hidden" />
+                <Plus size={20} className="rotate-45 hidden md:block" />
+              </button>
+              <div className="relative flex-1 sm:flex-none">
+                <button
+                  onClick={() => setIsDownloadOpen(!isDownloadOpen)}
+                  disabled={isDownloading}
+                  className="w-full sm:w-12 h-10 md:h-12 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl md:rounded-2xl hover:bg-indigo-600 hover:text-white transition-all duration-300 shadow-sm disabled:opacity-50"
+                  title="Download Options"
                 >
-                  <div className="px-3 py-2 border-b border-slate-50 mb-1">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Standard Size</p>
-                    <p className="text-[10px] font-bold text-slate-600">8.56cm x 5.4cm</p>
-                  </div>
-                  <button
-                    onClick={() => downloadPdf()}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-black text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
-                  >
-                    <FileText size={16} />
-                    Download PDF (HD)
-                  </button>
-                  <button
-                    onClick={() => downloadImage('png')}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-black text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
-                  >
-                    <ImageIcon size={16} />
-                    Download PNG (HD)
-                  </button>
-                  <button
-                    onClick={() => downloadImage('jpg')}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-black text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
-                  >
-                    <ImageIcon size={16} />
-                    Download JPG (HD)
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                  {isDownloading ? (
+                    <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <Download size={18} className="md:hidden" />
+                      <Download size={20} className="hidden md:block" />
+                    </>
+                  )}
+                </button>
+                
+                <AnimatePresence>
+                  {isDownloadOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                      className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-50"
+                    >
+                      <div className="px-3 py-2 border-b border-slate-50 mb-1">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Standard Size</p>
+                        <p className="text-[10px] font-bold text-slate-600">8.56cm x 5.4cm</p>
+                      </div>
+                      <button
+                        onClick={() => downloadPdf()}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-black text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
+                      >
+                        <FileText size={16} />
+                        Download PDF (HD)
+                      </button>
+                      <button
+                        onClick={() => downloadImage('png')}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-black text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
+                      >
+                        <ImageIcon size={16} />
+                        Download PNG (HD)
+                      </button>
+                      <button
+                        onClick={() => downloadImage('jpg')}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-black text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
+                      >
+                        <ImageIcon size={16} />
+                        Download JPG (HD)
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
-          <button
-            onClick={() => handlePrint()}
-            className="flex-1 sm:flex-none w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-slate-50 text-slate-600 rounded-xl md:rounded-2xl hover:bg-slate-900 hover:text-white transition-all duration-300 shadow-sm"
-            title="Print ID Card"
-          >
-            <Printer size={18} className="md:hidden" />
-            <Printer size={20} className="hidden md:block" />
-          </button>
-          
-          <button
-            onClick={handleDelete}
-            className="flex-1 sm:flex-none w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-red-50 text-red-600 rounded-xl md:rounded-2xl hover:bg-red-600 hover:text-white transition-all duration-300 shadow-sm"
-            title="Delete Record"
-          >
-            <Trash2 size={18} className="md:hidden" />
-            <Trash2 size={20} className="hidden md:block" />
-          </button>
-        </div>
+              <button
+                onClick={() => handlePrint()}
+                className="flex-1 sm:flex-none w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-slate-50 text-slate-600 rounded-xl md:rounded-2xl hover:bg-slate-900 hover:text-white transition-all duration-300 shadow-sm"
+                title="Print ID Card"
+              >
+                <Printer size={18} className="md:hidden" />
+                <Printer size={20} className="hidden md:block" />
+              </button>
+              
+              <button
+                onClick={handleDelete}
+                className="flex-1 sm:flex-none w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-red-50 text-red-600 rounded-xl md:rounded-2xl hover:bg-red-600 hover:text-white transition-all duration-300 shadow-sm"
+                title="Delete Record"
+              >
+                <Trash2 size={18} className="md:hidden" />
+                <Trash2 size={20} className="hidden md:block" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="flex justify-center bg-slate-50/50 p-4 md:p-8 rounded-[24px] md:rounded-[32px] border border-slate-100 relative overflow-hidden group-hover:bg-slate-50 transition-colors duration-500">

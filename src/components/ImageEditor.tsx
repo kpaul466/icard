@@ -107,11 +107,11 @@ export function ImageEditor({ image, onSave, onCancel }: ImageEditorProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 md:p-8"
+      className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-0 md:p-8"
     >
-      <div className="bg-white w-full max-w-5xl rounded-[40px] overflow-hidden shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-auto max-h-[90vh]">
+      <div className="bg-white w-full h-full md:h-auto md:max-w-5xl md:rounded-[40px] overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-screen md:max-h-[90vh]">
         {/* Editor Area */}
-        <div className="flex-1 relative bg-slate-900 min-h-[300px] md:min-h-[500px]">
+        <div className="flex-1 relative bg-slate-900 min-h-[40vh] md:min-h-[500px]">
           <Cropper
             image={image}
             crop={crop}
@@ -130,15 +130,15 @@ export function ImageEditor({ image, onSave, onCancel }: ImageEditorProps) {
         </div>
 
         {/* Controls Area */}
-        <div className="w-full md:w-[320px] bg-white p-8 flex flex-col gap-8 overflow-y-auto border-l border-slate-100">
+        <div className="w-full md:w-[360px] bg-white p-6 md:p-8 flex flex-col gap-6 md:gap-8 overflow-y-auto border-t md:border-t-0 md:border-l border-slate-100">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-black text-slate-900 tracking-tight">Edit Photo</h3>
+            <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">Edit Photo</h3>
             <button onClick={onCancel} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
               <X size={20} className="text-slate-400" />
             </button>
           </div>
 
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-x-6 gap-y-5 md:gap-y-6">
             {/* Zoom */}
             <ControlSlider
               icon={<Scissors size={16} />}
@@ -181,29 +181,31 @@ export function ImageEditor({ image, onSave, onCancel }: ImageEditorProps) {
             />
 
             {/* Hue */}
-            <ControlSlider
-              icon={<Palette size={16} />}
-              label="Hue"
-              value={hue}
-              min={0}
-              max={360}
-              onChange={setHue}
-            />
+            <div className="sm:col-span-2 md:col-span-1">
+              <ControlSlider
+                icon={<Palette size={16} />}
+                label="Hue"
+                value={hue}
+                min={0}
+                max={360}
+                onChange={setHue}
+              />
+            </div>
           </div>
 
-          <div className="mt-auto pt-8 flex gap-4">
+          <div className="mt-auto pt-6 md:pt-8 flex gap-3 md:gap-4">
             <button
               onClick={onCancel}
-              className="flex-1 py-4 px-6 bg-slate-100 text-slate-600 font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+              className="flex-1 py-3.5 md:py-4 px-4 md:px-6 bg-slate-100 text-slate-600 font-black rounded-2xl text-[10px] md:text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="flex-1 py-4 px-6 bg-indigo-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-500/20 transition-all flex items-center justify-center gap-2"
+              className="flex-2 py-3.5 md:py-4 px-4 md:px-6 bg-indigo-600 text-white font-black rounded-2xl text-[10px] md:text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-500/20 transition-all flex items-center justify-center gap-2"
             >
               <Check size={16} />
-              Apply
+              Apply Changes
             </button>
           </div>
         </div>
