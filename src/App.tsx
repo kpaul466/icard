@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db, signInWithGoogle, logout } from './firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, getRedirectResult } from 'firebase/auth';
 import { collection, query, where, onSnapshot, orderBy, doc, getDoc, setDoc, addDoc, deleteDoc, updateDoc, getDocs } from 'firebase/firestore';
 import { Employee } from './types';
 import { EmployeeForm } from './components/EmployeeForm';
@@ -180,6 +180,12 @@ function AppContent() {
         setIsAdmin(false);
         setLoading(false);
       }
+    });
+
+    // Handle redirect result for mobile PWAs
+    getRedirectResult(auth).catch((error) => {
+      console.error("Redirect Auth Error:", error);
+      alert("Authentication failed: " + error.message);
     });
 
     return () => unsubscribeAuth();

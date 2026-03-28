@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, connectAuthEmulator } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 const firebaseConfig = {
   apiKey: "AIzaSyDVR5sbIV_waSR6Qu3kQLn-0_xjxeD6uYU",
@@ -16,7 +16,7 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
+export const signInWithGoogle = () => signInWithRedirect(auth, googleProvider);
 export const logout = () => {
   localStorage.removeItem('id-portal-user-settings');
   return signOut(auth);
