@@ -49,8 +49,14 @@ export function EmployeeList({ employees, onDelete, onEdit, settings, isAdmin, i
           <Users size={28} className="text-slate-300 md:hidden" />
           <Users size={32} className="text-slate-300 hidden md:block" />
         </div>
-        <h3 className="text-lg md:text-xl font-black text-slate-900 mb-2">No Records Found</h3>
-        <p className="text-slate-400 text-xs md:text-sm font-medium max-w-xs mx-auto">Start by generating a new ID card for your employees or contractors.</p>
+        <h3 className="text-lg md:text-xl font-black text-slate-900 mb-2">
+          {isAdmin ? 'No Records Found' : 'Your Personal Directory is Empty'}
+        </h3>
+        <p className="text-slate-400 text-xs md:text-sm font-medium max-w-xs mx-auto">
+          {isAdmin 
+            ? 'Start by generating a new ID card for your employees or contractors.' 
+            : 'You haven\'t created any ID cards yet. As a staff member, you can only see records you have personally generated.'}
+        </p>
       </motion.div>
     );
   }

@@ -264,10 +264,10 @@ function AppContent() {
       q = query(employeesRef, orderBy('createdAt', 'desc'));
     } else {
       // Regular users (Editors) only see their own records
+      // Removing orderBy to avoid composite index requirement for now
       q = query(
         employeesRef,
-        where('createdBy', '==', user.uid),
-        orderBy('createdAt', 'desc')
+        where('createdBy', '==', user.uid)
       );
     }
 
@@ -277,6 +277,16 @@ function AppContent() {
         id: doc.id,
         ...doc.data()
       })) as Employee[];
+      
+      // Sort manually if we removed orderBy to avoid index issues
+      if (!isAdmin) {
+        emps.sort((a, b) => {
+          const dateA = a.createdAt?.seconds || 0;
+          const dateB = b.createdAt?.seconds || 0;
+          return dateB - dateA;
+        });
+      }
+      
       setEmployees(emps);
       setIsEmployeesLoading(false);
     }, (error) => {
