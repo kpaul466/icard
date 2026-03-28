@@ -309,14 +309,25 @@ const EmployeeListItem: React.FC<{ employee: Employee; onDelete: () => void; onE
         </AnimatePresence>
       </div>
 
-      <div className="flex justify-center bg-slate-50/50 p-4 md:p-8 rounded-[24px] md:rounded-[32px] border border-slate-100 relative overflow-hidden group-hover:bg-slate-50 transition-colors duration-500">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-500/5 blur-3xl rounded-full -translate-x-1/2 translate-y-1/2"></div>
-        
-        <div className="relative z-10 scale-[0.75] sm:scale-90 md:scale-100 transition-transform duration-500 group-hover:scale-[1.02]">
-          <IDCard ref={cardRef} employee={employee} settings={settings} />
-        </div>
-      </div>
+      <AnimatePresence>
+        {showActions && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex justify-center bg-slate-50/50 p-4 md:p-8 rounded-[24px] md:rounded-[32px] border border-slate-100 relative overflow-hidden group-hover:bg-slate-50 transition-colors duration-500">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-500/5 blur-3xl rounded-full -translate-x-1/2 translate-y-1/2"></div>
+              
+              <div className="relative z-10 scale-[0.75] sm:scale-90 md:scale-100 transition-transform duration-500 group-hover:scale-[1.02]">
+                <IDCard ref={cardRef} employee={employee} settings={settings} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
-}
+};
