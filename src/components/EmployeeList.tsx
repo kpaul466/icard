@@ -22,12 +22,16 @@ interface EmployeeListProps {
 export function EmployeeList({ employees, onDelete, onEdit, settings, isAdmin, isLoading }: EmployeeListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredEmployees = employees.filter(emp => 
-    emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    emp.agencyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    emp.createdBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (emp.creatorEmail && emp.creatorEmail.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredEmployees = employees.filter(emp => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      (emp.name && emp.name.toLowerCase().includes(query)) ||
+      (emp.agencyName && emp.agencyName.toLowerCase().includes(query)) ||
+      (emp.createdBy && emp.createdBy.toLowerCase().includes(query)) ||
+      (emp.creatorEmail && emp.creatorEmail.toLowerCase().includes(query))
+    );
+  });
 
   if (isLoading) {
     return (
