@@ -18,7 +18,6 @@ export const googleProvider = new GoogleAuthProvider();
 
 export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
 export const logout = () => {
-  localStorage.removeItem('id-portal-user-settings');
   return signOut(auth);
 };
 

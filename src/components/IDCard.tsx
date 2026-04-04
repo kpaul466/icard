@@ -11,11 +11,11 @@ export const IDCard = forwardRef<HTMLDivElement, IDCardProps>(({ employee, setti
   const photoUrl = getPhotoUrl(employee.photoUrl);
   
   const displaySettings = {
-    officePhone: employee.officePhone || settings?.officePhone || '9332789274',
-    officeEmail: employee.officeEmail || settings?.officeEmail || 'sm.falakata@wbsedcl.in',
-    issuingAuthority: employee.issuingAuthority || settings?.issuingAuthority || 'Asst. Engg & Station Manager\nFalakata CCC, WBSEDCL',
-    emergencyTag: employee.emergencyTag || settings?.emergencyTag || 'ON EMERGENCY DUTY',
-    cccName: employee.cccName || settings?.cccName || 'Falakata CCC'
+    officePhone: employee.officePhone ?? (settings?.officePhone !== undefined ? settings.officePhone : '9332789274'),
+    officeEmail: employee.officeEmail ?? (settings?.officeEmail !== undefined ? settings.officeEmail : 'sm.falakata@wbsedcl.in'),
+    issuingAuthority: employee.issuingAuthority ?? (settings?.issuingAuthority !== undefined ? settings.issuingAuthority : 'Asst. Engg & Station Manager\nFalakata CCC, WBSEDCL'),
+    emergencyTag: employee.emergencyTag ?? (settings?.emergencyTag !== undefined ? settings.emergencyTag : 'ON EMERGENCY DUTY'),
+    cccName: employee.cccName ?? (settings?.cccName !== undefined ? settings.cccName : 'Falakata CCC')
   };
 
   const formatDate = (dateStr: string | undefined) => {
