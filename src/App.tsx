@@ -76,14 +76,8 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isEmployeesLoading, setIsEmployeesLoading] = useState(true);
-  const [settings, setSettings] = useState<any>(() => {
-    const cached = localStorage.getItem('id-portal-user-settings');
-    return cached ? JSON.parse(cached) : null;
-  });
-  const [globalSettings, setGlobalSettings] = useState<any>(() => {
-    const cached = localStorage.getItem('id-portal-global-settings');
-    return cached ? JSON.parse(cached) : null;
-  });
+  const [settings, setSettings] = useState<any>(null);
+  const [globalSettings, setGlobalSettings] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'list' | 'add' | 'users' | 'settings'>('list');
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -129,10 +123,8 @@ function AppContent() {
       if (snapshot.exists()) {
         const data = snapshot.data();
         setGlobalSettings(data);
-        localStorage.setItem('id-portal-global-settings', JSON.stringify(data));
       } else {
         setGlobalSettings(defaultSettings);
-        localStorage.setItem('id-portal-global-settings', JSON.stringify(defaultSettings));
       }
     }, (error) => {
       console.error("Global Settings Snapshot Error:", error);
@@ -165,7 +157,6 @@ function AppContent() {
         newSettings = globalSettings || defaultSettings;
       }
       setSettings(newSettings);
-      localStorage.setItem('id-portal-user-settings', JSON.stringify(newSettings));
     }, (error) => {
       console.error("User Settings Snapshot Error:", error);
     });
