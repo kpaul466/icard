@@ -153,13 +153,13 @@ function AppContent() {
       // If admin, prioritize global settings for a consistent "Master" view
       if (isAdmin) {
         newSettings = globalSettings || defaultSettings;
-      } else if (userData && (userData.officePhone || userData.officeEmail || userData.issuingAuthority || userData.emergencyTag || userData.cccName)) {
+      } else if (userData && ('officePhone' in userData || 'officeEmail' in userData || 'issuingAuthority' in userData || 'emergencyTag' in userData || 'cccName' in userData)) {
         newSettings = {
-          officePhone: userData.officePhone || globalSettings?.officePhone || defaultSettings.officePhone,
-          officeEmail: userData.officeEmail || globalSettings?.officeEmail || defaultSettings.officeEmail,
-          issuingAuthority: userData.issuingAuthority || globalSettings?.issuingAuthority || defaultSettings.issuingAuthority,
-          emergencyTag: userData.emergencyTag || globalSettings?.emergencyTag || defaultSettings.emergencyTag,
-          cccName: userData.cccName || globalSettings?.cccName || defaultSettings.cccName
+          officePhone: userData.officePhone !== undefined ? userData.officePhone : (globalSettings?.officePhone || defaultSettings.officePhone),
+          officeEmail: userData.officeEmail !== undefined ? userData.officeEmail : (globalSettings?.officeEmail || defaultSettings.officeEmail),
+          issuingAuthority: userData.issuingAuthority !== undefined ? userData.issuingAuthority : (globalSettings?.issuingAuthority || defaultSettings.issuingAuthority),
+          emergencyTag: userData.emergencyTag !== undefined ? userData.emergencyTag : (globalSettings?.emergencyTag || defaultSettings.emergencyTag),
+          cccName: userData.cccName !== undefined ? userData.cccName : (globalSettings?.cccName || defaultSettings.cccName)
         };
       } else {
         newSettings = globalSettings || defaultSettings;
@@ -658,7 +658,7 @@ function SettingsForm({ settings, isAdmin, userId }: { settings: any, isAdmin: b
       if (saveToGlobal && isAdmin) {
         await setDoc(doc(db, 'settings', 'global'), formData);
       } else {
-        await updateDoc(doc(db, 'users', userId), formData);
+        await setDoc(doc(db, 'users', userId), formData, { merge: true });
       }
       alert('Settings updated successfully!');
     } catch (error) {
