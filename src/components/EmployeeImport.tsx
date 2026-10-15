@@ -124,11 +124,14 @@ function parseEmployees(workbook: Workbook): ImportedEmployee[] {
   return rows;
 }
 
-async function downloadTemplate() {
+async function downloadTemplate(canEditIssueNumber: boolean) {
   const { Workbook } = await import('exceljs');
   const workbook = new Workbook();
   const sheet = workbook.addWorksheet('Employees');
-  sheet.columns = employeeColumns.map(column => ({ header: column.header, key: column.key, width: 22 }));
+  const columns = canEditIssueNumber
+    ? employeeColumns
+    : employeeColumns.filter(column => column.key !== 'issueNo');
+  sheet.columns = columns.map(column => ({ header: column.header, key: column.key, width: 22 }));
   sheet.getRow(1).font = { bold: true };
   sheet.views = [{ state: 'frozen', ySplit: 1 }];
 
@@ -181,7 +184,7 @@ export function EmployeeImport({ settings, cccId, canImport = true, assignedAgen
       await workbook.xlsx.load(await file.arrayBuffer());
       const employees = parseEmployees(workbook);
       if (!canEditIssueNumber && !settings?.cardSettings?.defaultIssueNo?.trim()) {
-        throw new Error('Ask an Admin to configure the default issue number before importing employee records.');
+        throw new Error('Ask an Admin to configure the issue number for this CCC before importing employee records.');
       }
       if (assignedAgency) {
         const mismatchedRows = employees.filter(employee => employee.agencyName !== assignedAgency);
@@ -259,7 +262,7 @@ export function EmployeeImport({ settings, cccId, canImport = true, assignedAgen
         </button>
         <button
           type="button"
-          onClick={() => void downloadTemplate().catch(downloadError => {
+          onClick={() => void downloadTemplate(canEditIssueNumber).catch(downloadError => {
             setError(downloadError instanceof Error ? downloadError.message : String(downloadError));
           })}
           className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 text-slate-600 rounded-xl md:rounded-2xl text-xs md:text-sm font-black hover:bg-slate-100 transition-all"

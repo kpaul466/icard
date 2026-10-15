@@ -188,15 +188,6 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings, c
     }
   }, [editingEmployee]);
 
-  useEffect(() => {
-    if (!editingEmployee && !canEditIssueNumber) {
-      setFormData(current => ({
-        ...current,
-        issueNo: current.issueNo || settings?.cardSettings?.defaultIssueNo || ''
-      }));
-    }
-  }, [canEditIssueNumber, editingEmployee, settings?.cardSettings?.defaultIssueNo]);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -236,7 +227,7 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings, c
     if (!issueNo.trim()) {
       setIssueNumberError(canEditIssueNumber
         ? 'Enter an issue number or configure the default from Card Design.'
-        : 'Ask an Admin to configure the default issue number before creating employee cards.');
+        : 'Ask an Admin to configure the issue number for this CCC before creating employee cards.');
       return;
     }
     setIssueNumberError('');
@@ -473,8 +464,12 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings, c
 
           <InputGroup icon={<MapPin size={18} />} label="Working Area" name="workingArea" value={formData.workingArea} onChange={handleChange} placeholder="FALAKATA CCC" />
 
-          <InputGroup icon={<Hash size={18} />} label="Issue Number" name="issueNo" value={formData.issueNo} onChange={handleChange} placeholder="Set by Admin" readOnly={!canEditIssueNumber} />
-          {issueNumberError && <p role="alert" className="md:col-span-2 -mt-4 text-xs font-bold text-red-700">{issueNumberError}</p>}
+          {canEditIssueNumber && (
+            <>
+              <InputGroup icon={<Hash size={18} />} label="Issue Number" name="issueNo" value={formData.issueNo} onChange={handleChange} placeholder="Set issue number" />
+              {issueNumberError && <p role="alert" className="md:col-span-2 -mt-4 text-xs font-bold text-red-700">{issueNumberError}</p>}
+            </>
+          )}
           <InputGroup icon={<Hash size={18} />} label="UID Number (record only; not printed)" name="uidNo" value={formData.uidNo} onChange={handleChange} placeholder="Enter UID number" />
           <InputGroup icon={<Calendar size={18} />} label="Issue Date" name="issueDate" type="date" value={formData.issueDate} onChange={handleChange} />
           <InputGroup icon={<Calendar size={18} />} label="Valid Until" name="validUntil" type="date" value={formData.validUntil} onChange={handleChange} />

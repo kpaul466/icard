@@ -75,8 +75,9 @@ export function CardSettingsEditor({ initialSettings, onSave, onSaveAsDefault, s
             </label>
           ))}
           <label className="text-xs font-black text-slate-500">
-            Default issue number
+            CCC issue number / prefix
             <input value={settings.defaultIssueNo} onChange={event => update('defaultIssueNo', event.target.value)} placeholder="e.g. FKT/CCC/2026/001" className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-800" />
+            <span className="mt-1 block font-medium text-slate-400">This value is fixed to the selected CCC and applied to cards created by Editors.</span>
           </label>
         </div>
 

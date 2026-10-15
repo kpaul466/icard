@@ -352,7 +352,10 @@ function AppContent() {
   };
   const cardDisplaySettings = {
     ...settings,
-    cardSettings: mergeCardSettings(userProfile.cardSettings ?? cccCardLayout)
+    cardSettings: {
+      ...mergeCardSettings(userProfile.cardSettings ?? cccCardLayout),
+      defaultIssueNo: cccCardLayout.defaultIssueNo
+    }
   };
 
   if (loading) {

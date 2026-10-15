@@ -45,7 +45,7 @@ The portal uses Google Sign-In and has three levels of access:
 ### 3. Editor
 *   Must be assigned to an agency by their CCC Admin.
 *   Can view, create, edit, and import employee records only for their assigned agency within their assigned CCC; cannot delete records.
-*   Uses the Admin-configured issue number and card design when creating employee cards; Editors cannot change the issue number.
+*   Editors cannot change the issue number; employee cards they create or import use the issue number configured by the Admin for their CCC.
 *   Can customize personal office settings.
 
 Firestore rules enforce these role, CCC, and Editor agency boundaries. A verified, database-flagged Superuser has read/write access across application documents; client requests still cannot create, change, or delete the protected `isSuperuser` flag. Admin-managed agency options are stored per CCC in Firestore. To bootstrap a Superuser, a trusted backend using the Firebase Admin SDK (or a trusted database administrator) sets either `users/{Firebase Auth UID}` or `users/{lowercase email}` with the verified account's lowercase `email`, `role: "admin"`, and `isSuperuser: true`. The profile email must match the verified sign-in email. Deploy the current Firestore rules after changing Superuser profile setup.
@@ -56,7 +56,7 @@ Deploy Firestore rules to the configured Firebase project with `npx firebase-too
 
 Legacy employee records without a `cccId` remain visible to a scoped Admin only when their existing `cccName` exactly matches that Admin's assigned CCC. Editing such a record adds the CCC identifier for future queries.
 
-Admins and Superusers configure card layouts from **Card Design**. CCC defaults are stored in `cccCardSettings/{cccId}`; per-user overrides are stored on the authorized user's profile and take precedence over the CCC defaults. New employee cards retain a snapshot of the active card layout. Editors' issue numbers are prefilled from their personal override or CCC default and enforced by Firestore rules.
+Admins and Superusers configure card layouts and default issue numbers from **Card Design**. CCC defaults are stored in `cccCardSettings/{cccId}`; per-user overrides are stored on the authorized user's profile and take precedence for layout only. The issue number always comes from that employee's CCC settings, so Editors cannot change the CCC-specific number or prefix. New employee cards retain a snapshot of the active card layout, and Firestore rules enforce the CCC-configured issue number for Editor-created records.
 
 ---
 

@@ -4,7 +4,7 @@ import { IDCard } from './IDCard';
 import { useReactToPrint } from 'react-to-print';
 import { Printer, Trash2, Search, Filter, Download, Users, FileText, Image as ImageIcon, ChevronDown, Pencil } from 'lucide-react';
 import { db } from '../firebase';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { doc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { toPng, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
@@ -34,6 +34,34 @@ export function EmployeeList({ employees, onDelete, onEdit, settings, isAdmin, i
   const [showFilters, setShowFilters] = useState(false);
   const [exportError, setExportError] = useState('');
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
+  const [cccIssueNumbers, setCccIssueNumbers] = useState<Record<string, string>>({});
+
+  const cccIdsKey = [...new Set(employees
+    .map(employee => employee.cccId || employee.cccName)
+    .filter((cccId): cccId is string => Boolean(cccId)))].join('\u0000');
+
+  useEffect(() => {
+    if (!cccIdsKey) {
+      setCccIssueNumbers({});
+      return;
+    }
+
+    const unsubscribers = cccIdsKey.split('\u0000').map(cccId =>
+      onSnapshot(doc(db, 'cccCardSettings', cccId), snapshot => {
+        const issueNo = snapshot.data()?.cardSettings?.defaultIssueNo;
+        setCccIssueNumbers(current => ({
+          ...current,
+          [cccId]: typeof issueNo === 'string' ? issueNo : ''
+        }));
+      }, error => {
+        console.error(`Could not load issue number for CCC "${cccId}":`, error);
+      })
+    );
+    return () => unsubscribers.forEach(unsubscribe => unsubscribe());
+  }, [cccIdsKey]);
+
+  const getConfiguredIssueNo = (employee: Employee) =>
+    cccIssueNumbers[employee.cccId || employee.cccName || ''] || settings?.cardSettings?.defaultIssueNo || '';
 
   useEffect(() => {
     setAgencyFilter(filterAgency || '');
@@ -313,6 +341,7 @@ export function EmployeeList({ employees, onDelete, onEdit, settings, isAdmin, i
               onEdit={onEdit}
               index={index}
               settings={settings}
+              configuredIssueNo={getConfiguredIssueNo(employee)}
               isAdmin={isAdmin}
               canDelete={isSuperuser}
               isSelected={Boolean(employee.id && selectedEmployeeIds.has(employee.id))}
@@ -340,7 +369,7 @@ export function EmployeeList({ employees, onDelete, onEdit, settings, isAdmin, i
           <div className="a4-print-page" key={pageIndex}>
             {selectedEmployees.slice(pageIndex * 10, (pageIndex + 1) * 10).map(employee => (
               <div className="a4-print-card" key={employee.id}>
-                <IDCard employee={employee} settings={settings} />
+                <IDCard employee={employee} settings={settings} configuredIssueNo={getConfiguredIssueNo(employee)} />
               </div>
             ))}
           </div>
@@ -356,12 +385,13 @@ const EmployeeListItem: React.FC<{
   onEdit: (employee: Employee) => void;
   index: number;
   settings: any;
+  configuredIssueNo: string;
   isAdmin?: boolean;
   canDelete?: boolean;
   isSelected: boolean;
   onToggleSelection: (employeeId: string) => void;
   onFilterAgency: (agency: string) => void;
-}> = ({ employee, onDelete, onEdit, index, settings, isAdmin, canDelete, isSelected, onToggleSelection, onFilterAgency }) => {
+}> = ({ employee, onDelete, onEdit, index, settings, configuredIssueNo, isAdmin, canDelete, isSelected, onToggleSelection, onFilterAgency }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -613,7 +643,7 @@ const EmployeeListItem: React.FC<{
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-500/5 blur-3xl rounded-full -translate-x-1/2 translate-y-1/2"></div>
               
               <div className="relative z-10 scale-[0.75] transition-transform duration-500 group-hover:scale-[0.78]">
-                <IDCard ref={cardRef} employee={employee} settings={settings} />
+                <IDCard ref={cardRef} employee={employee} settings={settings} configuredIssueNo={configuredIssueNo} />
               </div>
             </div>
           </motion.div>

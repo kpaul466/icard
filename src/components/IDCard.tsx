@@ -6,9 +6,10 @@ import { mergeCardSettings } from '../lib/cardSettings';
 interface IDCardProps {
   employee: Employee;
   settings?: any;
+  configuredIssueNo?: string;
 }
 
-export const IDCard = forwardRef<HTMLDivElement, IDCardProps>(({ employee, settings }, ref) => {
+export const IDCard = forwardRef<HTMLDivElement, IDCardProps>(({ employee, settings, configuredIssueNo }, ref) => {
   const photoUrl = getPhotoUrl(employee.photoUrl);
   const cardSettings = mergeCardSettings(employee.cardSettings ?? settings?.cardSettings);
   const headerLine3 = cardSettings.headerLine3.replace(/\{\{cccName\}\}/g, settings?.cccName || 'CCC Name');
@@ -135,7 +136,7 @@ export const IDCard = forwardRef<HTMLDivElement, IDCardProps>(({ employee, setti
                 <DetailRow label="Working Area" value={employee.workingArea || 'FALAKATA CCC'} />
               </div>
               <div className="flex gap-5 mt-[-5px]">
-                <DetailRow label="Issue No." value={employee.issueNo || 'N/A'} />
+                <DetailRow label="Issue No." value={employee.issueNo?.trim() || configuredIssueNo?.trim() || settings?.cardSettings?.defaultIssueNo?.trim() || 'N/A'} />
                 <DetailRow label="Issue Date" value={formatDate(employee.issueDate) || 'N/A'} />
                 <DetailRow label="Valid Upto" value={formatDate(employee.validUntil) || 'N/A'} />
               </div>

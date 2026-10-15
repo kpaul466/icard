@@ -28,7 +28,11 @@ service cloud.firestore {
     }
 
     function callerProfilePath() {
-      return /databases/$(database)/documents/users/$(request.auth.token.email.lower());
+      let uidProfilePath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(uidProfilePath) &&
+        get(uidProfilePath).data.get('email', '').lower() == request.auth.token.email.lower()
+        ? uidProfilePath
+        : /databases/$(database)/documents/users/$(request.auth.token.email.lower());
     }
 
     function hasCallerProfile() {
@@ -75,13 +79,11 @@ service cloud.firestore {
     }
 
     function matchesCccIssueNumber(cccId, issueNo) {
-      let cccSettingsPath = /databases/$(database)/documents/cccCardSettings/$(cccId);
-      let personalIssueNo = callerProfile().get('cardSettings', {}).get('defaultIssueNo', null);
-      return issueNo is string && issueNo.size() > 0 && hasCallerProfile() &&
-        ((personalIssueNo is string && personalIssueNo == issueNo) ||
-          (personalIssueNo == null &&
-            exists(cccSettingsPath) &&
-            get(cccSettingsPath).data.get('cardSettings', {}).get('defaultIssueNo', '') == issueNo));
+      let settingsPath = /databases/$(database)/documents/cccCardSettings/$(cccId);
+      return issueNo is string &&
+        issueNo.size() > 0 &&
+        exists(settingsPath) &&
+        get(settingsPath).data.get('cardSettings', {}).get('defaultIssueNo', '') == issueNo;
     }
 
     function isValidAgencyProfile(data) {
