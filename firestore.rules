@@ -30,6 +30,7 @@ service cloud.firestore {
     function callerProfilePath() {
       let uidProfilePath = /databases/$(database)/documents/users/$(request.auth.uid);
       return exists(uidProfilePath) &&
+        get(uidProfilePath).data.get('email', '') is string &&
         get(uidProfilePath).data.get('email', '').lower() == request.auth.token.email.lower()
         ? uidProfilePath
         : /databases/$(database)/documents/users/$(request.auth.token.email.lower());
@@ -150,8 +151,15 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow get, list: if isSuperuser() ||
+      allow get: if isSuperuser() ||
+        (isSignedIn() &&
+          userId in [request.auth.uid, request.auth.token.email.lower()]) ||
         (isSignedIn() && resource.data.get('email', '') == request.auth.token.email.lower()) ||
+        (isSignedIn() && hasCallerProfile() &&
+          callerProfile().get('role', '') == 'admin' &&
+          isKnownCcc(callerCcc()) &&
+          resource.data.get('cccId', '') == callerCcc());
+      allow list: if isSuperuser() ||
         (isSignedIn() && hasCallerProfile() &&
           callerProfile().get('role', '') == 'admin' &&
           isKnownCcc(callerCcc()) &&

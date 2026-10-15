@@ -221,28 +221,51 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    if (!user?.email) return;
+    if (!user?.email) {
+      setIsAuthorized(false);
+      setIsAdmin(false);
+      setIsSuperuser(false);
+      setUserDocId(null);
+      setUserProfile({});
+      setLoading(false);
+      return;
+    }
 
+    const normalizedEmail = user.email.toLowerCase();
+    const profileIds = [...new Set([user.uid, normalizedEmail])];
+    const profileSnapshots = new Map<string, { id: string; data: Record<string, any> } | null>();
+    const resolvedProfileIds = new Set<string>();
     setLoading(true);
-    const userQuery = query(collection(db, 'users'), where('email', '==', user.email.toLowerCase()));
-    const unsubscribeUser = onSnapshot(userQuery, (snapshot) => {
-      const userDoc = snapshot.docs.find(candidate => candidate.id === user.uid) || snapshot.docs[0];
-      const userData = userDoc?.data();
-      const superuserProfileId = user.email.toLowerCase();
+    setIsAuthorized(false);
+    setIsAdmin(false);
+    setIsSuperuser(false);
+    setUserDocId(null);
+    setUserProfile({});
+
+    const updateProfile = () => {
+      if (resolvedProfileIds.size !== profileIds.length) return;
+
+      const userDoc = profileIds
+        .map(profileId => profileSnapshots.get(profileId))
+        .find((profile): profile is { id: string; data: Record<string, any> } =>
+          profile !== null && profile !== undefined &&
+          typeof profile.data.email === 'string' &&
+          profile.data.email.toLowerCase() === normalizedEmail
+        );
+      const userData = userDoc?.data;
       const superuser = Boolean(
         userDoc &&
-        (userDoc.id === user.uid || userDoc.id === superuserProfileId) &&
-        userData?.email?.toLowerCase() === superuserProfileId &&
+        (userDoc.id === user.uid || userDoc.id === normalizedEmail) &&
         userData?.role === 'admin' &&
         userData?.isSuperuser === true &&
         user.emailVerified
       );
       const admin = superuser || userData?.role === 'admin';
-      const authorized = Boolean(userData);
+      const authorized = Boolean(userData && ['admin', 'editor'].includes(userData.role));
 
       if (userDoc) {
         setUserDocId(userDoc.id);
-        setUserProfile(userData || {});
+        setUserProfile(userData);
       } else {
         setUserDocId(null);
         setUserProfile({});
@@ -252,15 +275,26 @@ function AppContent() {
       setIsAdmin(admin);
       setIsSuperuser(superuser);
       setLoading(false);
-    }, (error) => {
-      console.error('User profile lookup error:', error);
-      setIsAuthorized(false);
-      setIsAdmin(false);
-      setIsSuperuser(false);
-      setLoading(false);
-    });
+    };
 
-    return () => unsubscribeUser();
+    const unsubscribeUser = profileIds.map(profileId => onSnapshot(
+      doc(db, 'users', profileId),
+      snapshot => {
+        profileSnapshots.set(profileId, snapshot.exists()
+          ? { id: snapshot.id, data: snapshot.data() }
+          : null);
+        resolvedProfileIds.add(profileId);
+        updateProfile();
+      },
+      error => {
+        console.error(`User profile lookup failed for ${profileId}:`, error);
+        profileSnapshots.set(profileId, null);
+        resolvedProfileIds.add(profileId);
+        updateProfile();
+      }
+    ));
+
+    return () => unsubscribeUser.forEach(unsubscribe => unsubscribe());
   }, [user]);
 
   useEffect(() => {
