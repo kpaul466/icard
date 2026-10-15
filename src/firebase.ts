@@ -1,6 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  connectFirestoreEmulator
+} from 'firebase/firestore';
 const firebaseConfig = {
   apiKey: "AIzaSyDVR5sbIV_waSR6Qu3kQLn-0_xjxeD6uYU",
   authDomain: "icard-8ec36.firebaseapp.com",
@@ -12,7 +17,11 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 

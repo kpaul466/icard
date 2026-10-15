@@ -20,6 +20,7 @@ For the current implementation status and follow-up work, see [Project Progress]
 *   **Customizable Settings:** Set default issuing authorities, office contact details, and emergency tags.
 *   **Excel Import:** Import multiple employee records from the provided `.xlsx` template.
 *   **Mobile Ready (PWA):** Install the app directly to your phone's home screen for quick access.
+*   **Offline Data Cache:** Firestore caches previously loaded records in browser storage and synchronizes changes when online. Live listeners continue to receive database updates.
 
 ---
 
@@ -48,6 +49,8 @@ The portal uses Google Sign-In and has three levels of access:
 *   Can customize personal office settings.
 
 Firestore rules enforce these role, CCC, and Editor agency boundaries. A verified, database-flagged Superuser has read/write access across application documents; client requests still cannot create, change, or delete the protected `isSuperuser` flag. Admin-managed agency options are stored per CCC in Firestore. To bootstrap a Superuser, a trusted backend using the Firebase Admin SDK (or a trusted database administrator) sets either `users/{Firebase Auth UID}` or `users/{lowercase email}` with the verified account's lowercase `email`, `role: "admin"`, and `isSuperuser: true`. The profile email must match the verified sign-in email. Deploy the current Firestore rules after changing Superuser profile setup.
+
+Firestore web persistence stores cached application data in the browser's IndexedDB so previously loaded data can be shown offline and synchronized with server changes. This data is not encrypted by the app; use this feature only on trusted devices and browser profiles, especially when viewing employee records.
 
 Deploy Firestore rules to the configured Firebase project with `npx firebase-tools deploy --only firestore:rules --project icard-8ec36` after authenticating with `npx firebase-tools login`.
 
