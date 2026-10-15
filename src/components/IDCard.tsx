@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { Employee } from '../types';
 import { getPhotoUrl } from '../lib/firebaseUtils';
+import { mergeCardSettings } from '../lib/cardSettings';
 
 interface IDCardProps {
   employee: Employee;
@@ -9,6 +10,8 @@ interface IDCardProps {
 
 export const IDCard = forwardRef<HTMLDivElement, IDCardProps>(({ employee, settings }, ref) => {
   const photoUrl = getPhotoUrl(employee.photoUrl);
+  const cardSettings = mergeCardSettings(employee.cardSettings ?? settings?.cardSettings);
+  const headerLine3 = cardSettings.headerLine3.replace(/\{\{cccName\}\}/g, settings?.cccName || 'CCC Name');
   
   const displaySettings = {
     officePhone: employee.officePhone ?? (settings?.officePhone !== undefined ? settings.officePhone : '9332789274'),
@@ -55,14 +58,14 @@ export const IDCard = forwardRef<HTMLDivElement, IDCardProps>(({ employee, setti
       </div>
 
       {/* Header Section - Glassmorphism */}
-      <div className="relative z-10 bg-gradient-to-r from-indigo-600/95 via-purple-600/95 to-pink-600/95 backdrop-blur-md text-white p-2 flex flex-col justify-center shadow-lg">
+      <div className="relative z-10 backdrop-blur-md text-white p-2 flex flex-col justify-center shadow-lg" style={{ background: `linear-gradient(90deg, ${cardSettings.headerBackground}, #7c3aed, ${cardSettings.headerBackground})` }}>
         <div className="flex flex-col items-center justify-center text-center">
-          <h1 className="text-[9px] font-extrabold leading-tight tracking-wide uppercase drop-shadow-sm ">West Bengal State Electricity Distribution Co. Ltd.</h1>
-          <h2 className="text-[7px] font-bold leading-tight tracking-tight drop-shadow-sm ">(A Government Of West Bengal Enterprise)</h2>
-          <div className="text-[7px] font-medium leading-tight tracking-tight drop-shadow-sm ">{displaySettings.cccName}</div>
+          <h1 className="font-extrabold leading-tight tracking-wide uppercase drop-shadow-sm" style={{ fontSize: `${cardSettings.headerLine1FontSize}px` }}>{cardSettings.headerLine1}</h1>
+          <h2 className="font-bold leading-tight tracking-tight drop-shadow-sm" style={{ fontSize: `${cardSettings.headerLine2FontSize}px` }}>{cardSettings.headerLine2}</h2>
+          <div className="font-medium leading-tight tracking-tight drop-shadow-sm" style={{ fontSize: `${cardSettings.headerLine3FontSize}px` }}>{headerLine3}</div>
         </div>
         <div className="w-full" style={{ marginTop: '-8px' }}>
-          <div className="w-full flex justify-between items-center text-[5px] font-medium mb-1">
+          <div className="w-full flex justify-between items-center font-medium mb-1" style={{ fontSize: `${cardSettings.contactFontSize}px` }}>
             <div className="flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-2 h-2 text-white/95" viewBox="0 0 24 24" fill="white" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.09 4.18 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.72c.12 1.05.37 2.07.73 3.03a2 2 0 0 1-.45 2.11L8.91 10.91a16 16 0 0 0 6 6l1.05-1.05a2 2 0 0 1 2.11-.45c.96.36 1.98.61 3.03.73A2 2 0 0 1 22 16.92z" />
@@ -82,8 +85,8 @@ export const IDCard = forwardRef<HTMLDivElement, IDCardProps>(({ employee, setti
       </div>
 
       {/* Emergency Banner - High Contrast */}
-      <div style={{ marginTop: '-5px' }} className="relative z-10 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 bg-[length:200%_100%] animate-gradient-x text-white text-center shadow-md border-y border-white/10">
-        <h2 className="text-[9px] font-black uppercase tracking-[0.25em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)] ">{displaySettings.emergencyTag}</h2>
+      <div style={{ marginTop: '-5px', background: `linear-gradient(90deg, ${cardSettings.emergencyBackground}, #f59e0b, ${cardSettings.emergencyBackground})` }} className="relative z-10 bg-[length:200%_100%] animate-gradient-x text-white text-center shadow-md border-y border-white/10">
+        <h2 className="font-black uppercase tracking-[0.25em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]" style={{ fontSize: `${cardSettings.emergencyFontSize}px` }}>{displaySettings.emergencyTag}</h2>
       </div>
 
 
@@ -114,7 +117,7 @@ export const IDCard = forwardRef<HTMLDivElement, IDCardProps>(({ employee, setti
         <div className="flex-1 flex flex-col justify-between overflow-hidden">
           <div className="space-y-1">
             <div>
-              <div className="text-[14px] font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-800 to-purple-800 uppercase leading-tight tracking-tight">
+              <div className="font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-800 to-purple-800 uppercase leading-tight tracking-tight" style={{ fontSize: `${cardSettings.employeeNameFontSize}px` }}>
                 {employee.name}
               </div>
               <div className="flex items-center gap-1.5">
@@ -156,7 +159,7 @@ export const IDCard = forwardRef<HTMLDivElement, IDCardProps>(({ employee, setti
         <div className="w-1/2 flex justify-end">
           <div className="px-2 py-1 text-center">
             {displaySettings.issuingAuthority.split('\n').map((line: string, i: number) => (
-              <div key={i} className="text-[6px] font-black text-indigo-700 leading-tight tracking-tighter uppercase">{line}</div>
+              <div key={i} className="font-black text-indigo-700 leading-tight tracking-tighter uppercase" style={{ fontSize: `${cardSettings.issuingAuthorityFontSize}px` }}>{line}</div>
             ))}
             <div className="text-[7px] text-black font-bold font-black uppercase italic tracking-widest">Issuing Authority</div>
           </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { db, auth } from '../firebase';
-import { collection, addDoc, updateDoc, doc, serverTimestamp, Bytes, getDocFromServer } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, serverTimestamp, Bytes, getDocFromServer, getDocs, query, where } from 'firebase/firestore';
 import { Employee } from '../types';
 import { getPhotoUrl } from '../lib/firebaseUtils';
 
@@ -86,14 +86,44 @@ interface EmployeeFormProps {
   editingEmployee?: Employee | null;
   onCancel?: () => void;
   settings?: any;
+  cccId?: string;
+  assignedAgency?: string;
+  canEditIssueNumber?: boolean;
 }
 
-export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }: EmployeeFormProps) {
+export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings, cccId, assignedAgency, canEditIssueNumber = false }: EmployeeFormProps) {
   const [loading, setLoading] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(editingEmployee?.photoUrl ? getPhotoUrl(editingEmployee.photoUrl) || null : null);
   const [isEditingPhoto, setIsEditingPhoto] = useState(false);
   const [originalPhoto, setOriginalPhoto] = useState<string | null>(null);
+  const [agencyNames, setAgencyNames] = useState<string[]>([]);
+  const [agencyOptionsError, setAgencyOptionsError] = useState('');
+  const [issueNumberError, setIssueNumberError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!cccId || assignedAgency) {
+      setAgencyNames([]);
+      setAgencyOptionsError('');
+      return;
+    }
+    let active = true;
+    setAgencyOptionsError('');
+    void getDocs(query(collection(db, 'cccAgencies'), where('cccId', '==', cccId))).then(snapshot => {
+      if (!active) return;
+      const names = snapshot.docs.flatMap(agencyDoc => {
+        const savedNames = agencyDoc.data().agencyNames;
+        return Array.isArray(savedNames)
+          ? savedNames.filter((name: unknown): name is string => typeof name === 'string').map((name: string) => name.trim()).filter(Boolean)
+          : [];
+      });
+      setAgencyNames([...new Set(names)]);
+    }).catch(error => {
+      console.error('Could not load agency options for employee form:', error);
+      if (active) setAgencyOptionsError('Could not load agency options. Check Firestore access or ask an Admin to manage agency profiles.');
+    });
+    return () => { active = false; };
+  }, [cccId, assignedAgency]);
 
   const [formData, setFormData] = useState({
     name: editingEmployee?.name || '',
@@ -111,7 +141,8 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
     validityRanges: editingEmployee?.validityRanges || '',
     validUntil: editingEmployee?.validUntil || '',
     workingArea: editingEmployee?.workingArea || 'FALAKATA CCC',
-    issueNo: editingEmployee?.issueNo || '',
+    issueNo: editingEmployee?.issueNo || settings?.cardSettings?.defaultIssueNo || '',
+    uidNo: editingEmployee?.uidNo || '',
     issueDate: editingEmployee?.issueDate || new Date().toISOString().split('T')[0],
   });
 
@@ -149,12 +180,22 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
         validityRanges: editingEmployee.validityRanges || '',
         validUntil: editingEmployee.validUntil || '',
         workingArea: editingEmployee.workingArea || 'FALAKATA CCC',
-        issueNo: editingEmployee.issueNo || '',
+        issueNo: editingEmployee.issueNo || settings?.cardSettings?.defaultIssueNo || '',
+        uidNo: editingEmployee.uidNo || '',
         issueDate: editingEmployee.issueDate || new Date().toISOString().split('T')[0],
       });
       setPhotoPreview(getPhotoUrl(editingEmployee.photoUrl) || null);
     }
   }, [editingEmployee]);
+
+  useEffect(() => {
+    if (!editingEmployee && !canEditIssueNumber) {
+      setFormData(current => ({
+        ...current,
+        issueNo: current.issueNo || settings?.cardSettings?.defaultIssueNo || ''
+      }));
+    }
+  }, [canEditIssueNumber, editingEmployee, settings?.cardSettings?.defaultIssueNo]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -189,6 +230,16 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
     e.preventDefault();
     if (!auth.currentUser) return;
 
+    const issueNo = canEditIssueNumber
+      ? formData.issueNo
+      : editingEmployee?.issueNo || settings?.cardSettings?.defaultIssueNo || '';
+    if (!issueNo.trim()) {
+      setIssueNumberError(canEditIssueNumber
+        ? 'Enter an issue number or configure the default from Card Design.'
+        : 'Ask an Admin to configure the default issue number before creating employee cards.');
+      return;
+    }
+    setIssueNumberError('');
     setLoading(true);
     try {
       if (editingEmployee?.id) {
@@ -196,6 +247,10 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
         try {
           await updateDoc(employeeRef, {
             ...formData,
+            issueNo,
+            cardSettings: editingEmployee.cardSettings ?? settings?.cardSettings,
+            agencyName: assignedAgency || formData.agencyName,
+            cccId: editingEmployee.cccId || cccId || settings?.cccName || '',
             updatedAt: serverTimestamp(),
           });
         } catch (error) {
@@ -205,6 +260,10 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
         try {
           await addDoc(collection(db, 'employees'), {
             ...formData,
+            issueNo,
+            cardSettings: settings?.cardSettings,
+            agencyName: assignedAgency || formData.agencyName,
+            cccId: cccId || settings?.cccName || '',
             createdAt: serverTimestamp(),
             createdBy: auth.currentUser.uid,
             creatorEmail: auth.currentUser.email,
@@ -231,7 +290,8 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
           validityRanges: '',
           validUntil: '',
           workingArea: 'FALAKATA CCC',
-          issueNo: '',
+          issueNo: settings?.cardSettings?.defaultIssueNo || '',
+          uidNo: '',
           issueDate: new Date().toISOString().split('T')[0],
         });
         setPhotoPreview(null);
@@ -246,6 +306,7 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    if (e.target.name === 'issueNo') setIssueNumberError('');
   };
 
   return (
@@ -276,7 +337,7 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
             {editingEmployee ? <Save size={28} className="hidden md:block" /> : <Plus size={28} className="hidden md:block" />}
           </div>
           <div>
-            <h2 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">
+            <h2 id="employee-edit-dialog-title" className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">
               {editingEmployee ? 'Edit Personnel' : 'Register Personnel'}
             </h2>
             <p className="text-slate-400 text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] mt-1 md:mt-1.5">Emergency Duty ID System</p>
@@ -291,7 +352,7 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
           >
             <ArrowLeft size={14} className="md:hidden" />
             <ArrowLeft size={16} className="hidden md:block" />
-            Back to Directory
+            Close editor
           </button>
         )}
       </div>
@@ -376,13 +437,45 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
           </div>
 
           <InputGroup icon={<Briefcase size={18} />} label="Designation" name="designation" value={formData.designation} onChange={handleChange} required placeholder="AGENCY STAFF" />
-          <InputGroup icon={<Building size={18} />} label="Agency Name" name="agencyName" value={formData.agencyName} onChange={handleChange} required placeholder="e.g. DAS ELECTRICAL" />
+          {assignedAgency ? (
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-3">
+                <span className="text-indigo-400"><Building size={18} /></span>Assigned Agency
+              </label>
+              <input value={assignedAgency} readOnly className="w-full px-6 py-4 bg-slate-100 border border-slate-200 rounded-[20px] text-sm font-bold text-slate-600" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <label htmlFor="employee-agency-name" className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-3">
+                <span className="text-indigo-400"><Building size={18} /></span>Agency Name
+              </label>
+              <select
+                id="employee-agency-name"
+                name="agencyName"
+                value={formData.agencyName}
+                onChange={handleChange}
+                required
+                className="w-full px-6 py-4 bg-white border border-slate-200 rounded-[20px] text-sm font-bold text-slate-700 outline-none focus:border-indigo-500"
+              >
+                <option value="" disabled>Select an agency</option>
+                {formData.agencyName && !agencyNames.includes(formData.agencyName) && (
+                  <option value={formData.agencyName}>{formData.agencyName} (current record)</option>
+                )}
+                {agencyNames.map(name => <option key={name} value={name}>{name}</option>)}
+              </select>
+              {agencyOptionsError
+                ? <p role="alert" className="text-xs font-semibold text-red-700">{agencyOptionsError}</p>
+                : agencyNames.length === 0 && <p className="text-xs font-semibold text-amber-700">Add an agency from Agency Profiles or User Creation first.</p>}
+            </div>
+          )}
           
           <InputGroup icon={<Phone size={18} />} label="Contact Number" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="10-digit mobile number" />
 
           <InputGroup icon={<MapPin size={18} />} label="Working Area" name="workingArea" value={formData.workingArea} onChange={handleChange} placeholder="FALAKATA CCC" />
 
-          <InputGroup icon={<Hash size={18} />} label="Issue Number" name="issueNo" value={formData.issueNo} onChange={handleChange} placeholder="FKT/CCC/..." />
+          <InputGroup icon={<Hash size={18} />} label="Issue Number" name="issueNo" value={formData.issueNo} onChange={handleChange} placeholder="Set by Admin" readOnly={!canEditIssueNumber} />
+          {issueNumberError && <p role="alert" className="md:col-span-2 -mt-4 text-xs font-bold text-red-700">{issueNumberError}</p>}
+          <InputGroup icon={<Hash size={18} />} label="UID Number (record only; not printed)" name="uidNo" value={formData.uidNo} onChange={handleChange} placeholder="Enter UID number" />
           <InputGroup icon={<Calendar size={18} />} label="Issue Date" name="issueDate" type="date" value={formData.issueDate} onChange={handleChange} />
           <InputGroup icon={<Calendar size={18} />} label="Valid Until" name="validUntil" type="date" value={formData.validUntil} onChange={handleChange} />
 
@@ -484,7 +577,7 @@ export function EmployeeForm({ onSuccess, editingEmployee, onCancel, settings }:
   );
 }
 
-function InputGroup({ icon, label, name, value, onChange, required, placeholder, type = 'text' }: any) {
+function InputGroup({ icon, label, name, value, onChange, required, placeholder, type = 'text', readOnly = false }: any) {
   return (
     <div className="space-y-3 group">
       <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-3 group-focus-within:text-indigo-600 transition-colors">
@@ -498,7 +591,8 @@ function InputGroup({ icon, label, name, value, onChange, required, placeholder,
         onChange={onChange}
         required={required}
         placeholder={placeholder}
-        className="w-full px-6 py-4 bg-slate-50/50 border border-slate-200 rounded-[20px] focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-bold placeholder:text-slate-300"
+        readOnly={readOnly}
+        className="w-full px-6 py-4 bg-slate-50/50 border border-slate-200 rounded-[20px] focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-bold placeholder:text-slate-300 read-only:bg-slate-100 read-only:text-slate-500"
       />
     </div>
   );

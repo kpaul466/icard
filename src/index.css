@@ -18,7 +18,24 @@
       top: 0;
       width: 100%;
     }
+    .a4-print-root,
+    .a4-print-root * {
+      visibility: visible !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .a4-print-root {
+      display: block !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
   }
+}
+
+.a4-print-root {
+  display: none;
 }
 
 .border-right {

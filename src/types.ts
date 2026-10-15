@@ -11,14 +11,17 @@ export interface Employee {
   validityRanges?: string; // For multiple ranges if needed
   workingArea?: string;
   issueNo?: string;
+  uidNo?: string;
   issueDate?: string;
   createdAt: any; // Firestore Timestamp
   createdBy: string;
   creatorEmail?: string;
+  cccId?: string;
   // Settings snapshot
   officePhone?: string;
   officeEmail?: string;
   issuingAuthority?: string;
   emergencyTag?: string;
   cccName?: string;
+  cardSettings?: Record<string, string | number>;
 }

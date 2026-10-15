@@ -1,95 +1,305 @@
-// ===============================================================
-// Assumed Data Model
-// ===============================================================
-//
-// Collection: employees
-// Document ID: auto-generated
-// Fields:
-//   - name: string (required) - Full name
-//   - designation: string (required) - Job title
-//   - agencyName: string (required) - Contractor name
-//   - employeeId: string (required) - Agency ID
-//   - bloodGroup: string (optional) - Blood group
-//   - contactNumber: string (optional) - Phone
-//   - photoUrl: string (optional) - Photo URL
-//   - validUntil: string (optional) - Validity date
-//   - cccName: string (required) - CCC Name
-//   - createdAt: timestamp (required) - Creation time
-//   - createdBy: string (required) - User UID
-//
-// ===============================================================
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper Functions
-    function isAuthenticated() {
+    function isSignedIn() {
       return request.auth != null;
     }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+
+    function hasSuperuserProfile(profilePath) {
+      return exists(profilePath) &&
+        get(profilePath).data.get('email', '').lower() == request.auth.token.email.lower() &&
+        get(profilePath).data.get('role', '') == 'admin' &&
+        get(profilePath).data.get('isSuperuser', false) == true;
     }
-    
-    function isDocOwner() {
-      return isAuthenticated() && request.auth.uid == resource.data.createdBy;
+
+    function isSuperuser() {
+      return isSignedIn() &&
+        request.auth.token.email_verified == true &&
+        (hasSuperuserProfile(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+          hasSuperuserProfile(/databases/$(database)/documents/users/$(request.auth.token.email.lower())));
+    }
+
+    function isKnownCcc(cccId) {
+      return cccId is string &&
+        exists(/databases/$(database)/documents/settings/global) &&
+        get(/databases/$(database)/documents/settings/global).data
+          .get('cccList', [get(/databases/$(database)/documents/settings/global).data.get('cccName', '')])
+          .hasAny([cccId]);
+    }
+
+    function callerProfilePath() {
+      return /databases/$(database)/documents/users/$(request.auth.token.email.lower());
+    }
+
+    function hasCallerProfile() {
+      return isSignedIn() && exists(callerProfilePath());
+    }
+
+    function callerProfile() {
+      return get(callerProfilePath()).data;
+    }
+
+    function callerCcc() {
+      return callerProfile().get('cccId', callerProfile().get('assignedCcc', ''));
     }
 
     function isAdmin() {
-      return isAuthenticated() &&
-        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-          (request.auth.token.email.lower() == "kkeshob@gmail.com" && request.auth.token.email_verified == true));
+      return isSuperuser() ||
+        (hasCallerProfile() &&
+          callerProfile().get('role', '') == 'admin' &&
+          isKnownCcc(callerCcc()));
     }
 
-    function isAuthorized() {
-      return isAuthenticated() && 
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) || isAdmin());
+    function isCccAdmin(cccId) {
+      return isAdmin() && (isSuperuser() || callerCcc() == cccId);
+    }
+
+    function isCccAgencyManager(cccId) {
+      return isSuperuser() ||
+        (hasCallerProfile() &&
+          callerProfile().get('role', '') == 'admin' &&
+          isKnownCcc(callerCcc()) &&
+          callerCcc() == cccId);
     }
 
     function isValidEmployee(data) {
-      return data.keys().hasAll(['name', 'designation', 'agencyName', 'cccName']) &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             data.designation is string && data.designation.size() > 0 && data.designation.size() < 100 &&
-             data.agencyName is string && data.agencyName.size() > 0 && data.agencyName.size() < 100 &&
-             data.cccName is string && data.cccName.size() > 0 && data.cccName.size() < 200;
+      return data.keys().hasAll(['name', 'designation', 'agencyName', 'cccName', 'cccId', 'createdBy']) &&
+        data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+        data.designation is string && data.designation.size() > 0 && data.designation.size() < 100 &&
+        data.agencyName is string && data.agencyName.size() > 0 && data.agencyName.size() < 100 &&
+        data.cccName is string && data.cccName.size() > 0 && data.cccName.size() < 200 &&
+        data.cccId is string && data.cccId.size() > 0 && data.cccId.size() < 200 &&
+        data.createdBy is string &&
+        (!data.keys().hasAny(['uidNo']) ||
+          (data.uidNo is string && data.uidNo.size() <= 64));
     }
 
-    // Test collection for connection validation
+    function matchesCccIssueNumber(cccId, issueNo) {
+      let cccSettingsPath = /databases/$(database)/documents/cccCardSettings/$(cccId);
+      let personalIssueNo = callerProfile().get('cardSettings', {}).get('defaultIssueNo', null);
+      return issueNo is string && issueNo.size() > 0 && hasCallerProfile() &&
+        ((personalIssueNo is string && personalIssueNo == issueNo) ||
+          (personalIssueNo == null &&
+            exists(cccSettingsPath) &&
+            get(cccSettingsPath).data.get('cardSettings', {}).get('defaultIssueNo', '') == issueNo));
+    }
+
+    function isValidAgencyProfile(data) {
+      return data.get('cccId', '') is string &&
+        data.get('cccId', '').size() > 0 &&
+        data.get('agencyName', '') is string &&
+        data.get('agencyName', '').size() > 0 &&
+        data.get('agencyName', '').size() < 150 &&
+        (!data.keys().hasAny(['address']) || data.address is string) &&
+        (!data.keys().hasAny(['phone']) || data.phone is string) &&
+        (!data.keys().hasAny(['email']) || data.email is string) &&
+        (!data.keys().hasAny(['enlistmentNo']) || data.enlistmentNo is string) &&
+        (!data.keys().hasAny(['vendorCode']) || data.vendorCode is string);
+    }
+
+    function canReadEmployee(data) {
+      return isSuperuser() ||
+        (hasCallerProfile() &&
+          isKnownCcc(callerCcc()) &&
+          (data.get('cccId', '') == callerCcc() ||
+            (data.get('cccId', '') == '' && data.get('cccName', '') == callerCcc())) &&
+          (callerProfile().get('role', '') == 'admin' ||
+            (callerProfile().get('role', '') == 'editor' &&
+              data.get('agencyName', '') == callerProfile().get('agencyName', '') &&
+              callerProfile().get('agencyName', '') != '')));
+    }
+
     match /test/connection {
       allow read: if true;
     }
 
     match /employees/{employeeId} {
-      // Allow authorized users to read their own employee records or all if admin
-      allow read: if isAuthorized() && (resource.data.createdBy == request.auth.uid || isAdmin());
-      allow create: if isAuthorized() && 
-                    isValidEmployee(request.resource.data) && 
-                    request.resource.data.createdBy == request.auth.uid;
-      allow update: if isAuthorized() && 
-                    (resource.data.createdBy == request.auth.uid || isAdmin()) && 
-                    isValidEmployee(request.resource.data);
-      allow delete: if isAuthorized() && (resource.data.createdBy == request.auth.uid || isAdmin());
+      allow read: if isSignedIn() && canReadEmployee(resource.data);
+      allow create: if isSignedIn() &&
+        isValidEmployee(request.resource.data) &&
+        request.resource.data.createdBy == request.auth.uid &&
+        isKnownCcc(request.resource.data.cccId) &&
+        (isSuperuser() ||
+          (hasCallerProfile() &&
+            request.resource.data.cccId == callerCcc() &&
+            isKnownCcc(callerCcc()) &&
+            (callerProfile().get('role', '') == 'admin' ||
+              (callerProfile().get('role', '') == 'editor' &&
+                request.resource.data.agencyName == callerProfile().get('agencyName', '') &&
+                matchesCccIssueNumber(request.resource.data.cccId, request.resource.data.get('issueNo', '')) &&
+                callerProfile().get('agencyName', '') != ''))));
+      allow update: if isSignedIn() &&
+        isValidEmployee(request.resource.data) &&
+        isKnownCcc(request.resource.data.cccId) &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        (isSuperuser() ||
+          (hasCallerProfile() &&
+            request.resource.data.cccId == callerCcc() &&
+            isKnownCcc(callerCcc()) &&
+            (resource.data.get('cccId', '') == callerCcc() ||
+              (resource.data.get('cccId', '') == '' && resource.data.get('cccName', '') == callerCcc())) &&
+            (callerProfile().get('role', '') == 'admin' ||
+              (callerProfile().get('role', '') == 'editor' &&
+                resource.data.get('agencyName', '') == callerProfile().get('agencyName', '') &&
+                request.resource.data.agencyName == callerProfile().get('agencyName', '') &&
+                request.resource.data.get('issueNo', '') == resource.data.get('issueNo', '') &&
+                callerProfile().get('agencyName', '') != ''))));
+      allow delete: if isSuperuser();
     }
-    
+
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin() || isOwner(userId);
+      allow get, list: if isSuperuser() ||
+        (isSignedIn() && resource.data.get('email', '') == request.auth.token.email.lower()) ||
+        (isSignedIn() && hasCallerProfile() &&
+          callerProfile().get('role', '') == 'admin' &&
+          isKnownCcc(callerCcc()) &&
+          resource.data.get('cccId', '') == callerCcc());
+
+      allow create: if
+        (isSuperuser() &&
+          userId == request.resource.data.get('email', '').lower() &&
+          request.resource.data.get('role', '') in ['admin', 'editor'] &&
+          (request.resource.data.get('role', '') == 'admin' ||
+            (request.resource.data.get('agencyName', '') is string &&
+              request.resource.data.get('agencyName', '').size() > 0)) &&
+          isKnownCcc(request.resource.data.get('cccId', '')) &&
+          request.resource.data.get('isSuperuser', false) == false) ||
+        (isAdmin() && !isSuperuser() &&
+          userId == request.resource.data.get('email', '').lower() &&
+          request.resource.data.get('role', '') == 'editor' &&
+          request.resource.data.get('cccId', '') == callerCcc() &&
+          request.resource.data.get('agencyName', '') is string &&
+          request.resource.data.get('agencyName', '').size() > 0 &&
+          isKnownCcc(request.resource.data.get('cccId', '')) &&
+          request.resource.data.get('isSuperuser', false) == false);
+
+      allow update: if
+        (isSuperuser() &&
+          userId in [request.auth.uid, request.auth.token.email.lower()] &&
+          request.resource.data.get('role', '') == resource.data.get('role', '') &&
+          request.resource.data.get('cccId', '') == resource.data.get('cccId', '') &&
+          request.resource.data.get('isSuperuser', false) == resource.data.get('isSuperuser', false) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'officePhone', 'officeEmail', 'issuingAuthority', 'emergencyTag', 'cccName', 'updatedAt'
+          ])) ||
+        (isSuperuser() &&
+          request.resource.data.get('email', '') == resource.data.get('email', '') &&
+          request.resource.data.get('role', '') in ['admin', 'editor'] &&
+          (request.resource.data.get('role', '') == 'admin' ||
+            (request.resource.data.get('agencyName', '') is string &&
+              request.resource.data.get('agencyName', '').size() > 0)) &&
+          isKnownCcc(request.resource.data.get('cccId', '')) &&
+          request.resource.data.get('isSuperuser', false) == resource.data.get('isSuperuser', false) &&
+          request.resource.data.get('isSuperuser', false) == false) ||
+        (isAdmin() && !isSuperuser() &&
+          resource.data.get('role', '') == 'editor' &&
+          request.resource.data.get('role', '') == 'editor' &&
+          request.resource.data.get('email', '') == resource.data.get('email', '') &&
+          request.resource.data.get('cccId', '') == callerCcc() &&
+          request.resource.data.get('isSuperuser', false) == resource.data.get('isSuperuser', false) &&
+          resource.data.get('cccId', '') == callerCcc() &&
+          request.resource.data.get('agencyName', '') is string &&
+          request.resource.data.get('agencyName', '').size() > 0 &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'agencyName', 'cccName', 'updatedAt'])) ||
+        (isAdmin() && !isSuperuser() &&
+          resource.data.get('cccId', '') == callerCcc() &&
+          request.resource.data.get('cccId', '') == resource.data.get('cccId', '') &&
+          request.resource.data.get('isSuperuser', false) == resource.data.get('isSuperuser', false) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['cardSettings', 'updatedAt']) &&
+          request.resource.data.get('cardSettings', {}) is map) ||
+        (isSignedIn() &&
+          resource.data.get('email', '') == request.auth.token.email.lower() &&
+          request.resource.data.get('email', '') == resource.data.get('email', '') &&
+          request.resource.data.get('role', '') == resource.data.get('role', '') &&
+          request.resource.data.get('cccId', '') == resource.data.get('cccId', '') &&
+          request.resource.data.get('assignedCcc', '') == resource.data.get('assignedCcc', '') &&
+          request.resource.data.get('agencyName', '') == resource.data.get('agencyName', '') &&
+          request.resource.data.get('isSuperuser', false) == resource.data.get('isSuperuser', false) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'officePhone', 'officeEmail', 'issuingAuthority', 'emergencyTag', 'cccName', 'updatedAt'
+          ]) &&
+          (!isAdmin() || request.resource.data.get('cccName', callerCcc()) == callerCcc()));
+
+      allow delete: if isSuperuser() &&
+        resource.data.get('isSuperuser', false) != true ||
+        (isAdmin() && !isSuperuser() &&
+          resource.data.get('role', '') == 'editor' &&
+          resource.data.get('cccId', '') == callerCcc());
+    }
+
+    match /cccAgencies/{agencyListId} {
+      allow get, list: if isSuperuser() ||
+        (isSignedIn() &&
+          isCccAgencyManager(resource.data.get('cccId', '')));
+      allow create: if isSignedIn() &&
+        isCccAgencyManager(request.resource.data.get('cccId', '')) &&
+        request.resource.data.get('agencyNames', []) is list &&
+        request.resource.data.get('agencyNames', []).size() <= 200;
+      allow update: if isSignedIn() &&
+        isCccAgencyManager(resource.data.get('cccId', '')) &&
+        request.resource.data.get('cccId', '') == resource.data.get('cccId', '') &&
+        request.resource.data.get('agencyNames', []) is list &&
+        request.resource.data.get('agencyNames', []).size() <= 200;
+      allow delete: if isSuperuser() ||
+        (isSignedIn() && isCccAgencyManager(resource.data.get('cccId', '')));
+    }
+
+    match /cccCardSettings/{cccId} {
+      allow read: if isSignedIn();
+      allow create: if isCccAdmin(request.resource.data.get('cccId', '')) &&
+        request.resource.data.get('cccId', '') == cccId &&
+        request.resource.data.get('cardSettings', {}) is map &&
+        request.resource.data.keys().hasOnly(['cccId', 'cardSettings', 'updatedAt']);
+      allow update: if isCccAdmin(resource.data.get('cccId', '')) &&
+        request.resource.data.get('cccId', '') == resource.data.get('cccId', '') &&
+        request.resource.data.get('cccId', '') == cccId &&
+        request.resource.data.get('cardSettings', {}) is map &&
+        request.resource.data.keys().hasOnly(['cccId', 'cardSettings', 'updatedAt']);
+      allow delete: if isSuperuser() ||
+        (isCccAdmin(resource.data.get('cccId', '')) && resource.data.get('cccId', '') == cccId);
+    }
+
+    match /agencies/{agencyId} {
+      allow get, list: if isSuperuser() ||
+        (isSignedIn() && isCccAgencyManager(resource.data.get('cccId', '')));
+      allow create: if isValidAgencyProfile(request.resource.data) &&
+        (isSuperuser() ||
+          (isSignedIn() &&
+            isCccAgencyManager(request.resource.data.get('cccId', ''))));
+      allow update: if isValidAgencyProfile(request.resource.data) &&
+        request.resource.data.get('cccId', '') == resource.data.get('cccId', '') &&
+        (isSuperuser() ||
+          (isSignedIn() &&
+            isCccAgencyManager(resource.data.get('cccId', ''))));
+      allow delete: if isSuperuser() ||
+        (isSignedIn() && isCccAgencyManager(resource.data.get('cccId', '')));
     }
 
     function isValidSettings(data) {
       return data.keys().hasAll(['officePhone', 'officeEmail', 'issuingAuthority', 'emergencyTag', 'cccName']) &&
-             data.officePhone is string &&
-             data.officeEmail is string &&
-             data.issuingAuthority is string &&
-             data.emergencyTag is string &&
-             data.cccName is string;
+        data.officePhone is string &&
+        data.officeEmail is string &&
+        data.issuingAuthority is string &&
+        data.emergencyTag is string &&
+        data.cccName is string &&
+        (!data.keys().hasAny(['cccList']) ||
+          (data.cccList is list && data.cccList.size() > 0));
     }
 
     match /settings/{settingId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin() && isValidSettings(request.resource.data);
+      allow read: if isSignedIn();
+      allow write: if isSuperuser() && isValidSettings(request.resource.data);
+    }
+
+    match /{document=**} {
+      allow read: if isSuperuser();
+      allow create: if isSuperuser() &&
+        request.resource.data.get('isSuperuser', false) != true;
+      allow update: if isSuperuser() &&
+        request.resource.data.get('isSuperuser', false) ==
+          resource.data.get('isSuperuser', false);
+      allow delete: if isSuperuser() &&
+        resource.data.get('isSuperuser', false) != true;
     }
   }
 }
